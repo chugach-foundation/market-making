@@ -62,7 +62,7 @@ export class TopOfBookStrat implements MM_Strat{
             //Add the fraction missing cuz queue priority
             qbid = oinfo.bidPrice;
             const dif = bidsize - oinfo.bidSize;
-            if(dif){
+            if(dif > .1){
                 bidix = this.mclient.makeBidInstruction(qbid, dif);
             }  
         }
@@ -81,7 +81,7 @@ export class TopOfBookStrat implements MM_Strat{
             //Add the fraction missing cuz queue priority
             qask = oinfo.askPrice;
             const dif = asksize - oinfo.askSize;
-            if(dif){
+            if(dif > .1){
                 mintix = this.mclient.makeMintInstruction(qask, dif);
             }
         }
@@ -117,8 +117,7 @@ export class TopOfBookStrat implements MM_Strat{
         });
         
         if(txn.instructions.length <= 1){
-            console.log("SKIPPING TXN: NO UPDATES REQUIRED");
-            return;
+            return "SKIPPING TXN: NO UPDATES REQUIRED";
         } 
 
         const connection = this.mclient.connection;
@@ -135,8 +134,8 @@ export class TopOfBookStrat implements MM_Strat{
                 skipPreflight : true,
                 preflightCommitment : "processed"
             });
-        console.log(txh);
         await connection.confirmTransaction(txh, "processed");
+        return txh;
     }
     
 }
