@@ -1,0 +1,15 @@
+{
+	"compilerOptions": {
+		"lib": ["es2015"],
+		"module": "commonjs",
+		"target": "es2020",
+		"outDir": "lib",
+		"rootDir": "src",
+		"esModuleInterop": true,
+		"declaration": true,
+		"sourceMap": true,
+		"resolveJsonModule": true,
+		"baseUrl": "./",
+		"typeRoots": ["./node_modules/@types"],
+	}
+}
