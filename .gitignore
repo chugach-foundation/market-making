@@ -15,6 +15,10 @@ tmp
 # VS things
 .vscode
 
+#playgrounds
+playground*.ts
+Faucet.ts
+
 # Build
 public/css/main.css
 

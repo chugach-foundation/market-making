@@ -14,17 +14,21 @@ async function marketMaker() {
 	let programAddress = new PublicKey('DsGUdHQY2EnvWbN5VoSZSyjL4EWnStgaJhFDmJV34GQQ');
 	let cAssetMint = CAssetPubkeys.DEVNET[0];
 
+
 	const client = await CypherMMClient.load({
 		cAssetMarketProgramAddress : programAddress,
 		cAssetMint : cAssetMint,
 		cAssetOrderbookAddress : cAssetMarket,
 	},
 	"DEVNET",
-	process.env.SECRET_KEY,
 	rpcAddy,
-	GroupPubkeys.DEVNET
+	GroupPubkeys.DEVNET,
+	process.env.TEST_KEY,
+	process.env.SECRET_KEY
 	);
-	const strat : MM_Strat = new TopOfBookStrat(client, 
+
+
+	const strat : MM_Strat = new TopOfBookStrat(client,
 		{
 			max_size : 100,
 			time_requote: 10000

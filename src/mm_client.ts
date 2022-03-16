@@ -27,22 +27,20 @@ export type OutOrdersInfo = {
 export class CypherMMClient{
 
     private lmarket : LiveMarket
-    private ctr : CypherUserController
+    bidctr : CypherUserController
+    mintctr : CypherUserController
     private cAssetMint : PublicKey
     connection : Connection
-    payer : Keypair
 
-    private constructor(cInfo : cAssetMarketInfo, ctr : CypherUserController, lmarket : LiveMarket, connection: Connection, payer : Keypair){
+    private constructor(cInfo : cAssetMarketInfo, lmarket : LiveMarket, connection: Connection, bidctr : CypherUserController, mintctr? : CypherUserController){
         this.cAssetMint = cInfo.cAssetMint;
         this.lmarket = lmarket;
-        this.ctr = ctr;
         this.connection = connection;
-        this.payer = payer;
+        this.bidctr = bidctr;
+        this.mintctr = mintctr ?? bidctr;
     }
 
-    static async load(cInfo : cAssetMarketInfo, cluster : CLUSTER, payerPath : string, rpc : string, groupAddr : PublicKey) : Promise<CypherMMClient>{
-        const payer = loadPayer(payerPath);
-        const ctr = await CypherUserController.load(new CypherClient(cluster, new NodeWallet(payer), {commitment : "processed", skipPreflight : true}), groupAddr, "ACCOUNT");
+    static async load(cInfo : cAssetMarketInfo, cluster : CLUSTER, rpc : string, groupAddr : PublicKey, bidderKeyPath : string, minterKeyPath? : string) : Promise<CypherMMClient>{
         const connection = new Connection(rpc, "processed")
         const lmarket = new LiveMarket(
             connection, 
@@ -55,11 +53,31 @@ export class CypherMMClient{
             cInfo.cAssetMarketProgramAddress)
             );
         await lmarket.start((info) => {});
-        return new CypherMMClient(cInfo, ctr, lmarket, connection, payer);
+        
+        
+        const bidk = loadPayer(bidderKeyPath);
+        const bidctr = await CypherUserController.load(new CypherClient(cluster, new NodeWallet(bidk), {commitment : "processed", skipPreflight : true}), groupAddr, "ACCOUNT");
+        if(minterKeyPath){
+            const mintk = loadPayer(minterKeyPath);
+            const mintctr = await CypherUserController.load(new CypherClient(cluster, new NodeWallet(mintk), {commitment : "processed", skipPreflight : true}), groupAddr, "ACCOUNT");
+            return new CypherMMClient(cInfo, lmarket, connection, bidctr, mintctr);
+        }
+        else{
+            return new CypherMMClient(cInfo, lmarket, connection, bidctr);
+        }
+        
+    }
+
+    get mintPayer() : Keypair{
+        return (this.mintctr.client.provider.wallet as NodeWallet).payer;
+    }
+
+    get bidPayer() : Keypair{
+        return (this.bidctr.client.provider.wallet as NodeWallet).payer;
     }
 
     makeBidInstruction(price : number, size : number) : TransactionInstruction{
-        return this.ctr.makePlaceOrderInstr(this.cAssetMint, 
+        return this.bidctr.makePlaceOrderInstr(this.cAssetMint, 
             {
                 side : "buy",
                 orderType : "postOnly",
@@ -70,7 +88,7 @@ export class CypherMMClient{
     }
 
     makeAskInstruction(price : number, size : number) : TransactionInstruction{
-        return this.ctr.makePlaceOrderInstr(this.cAssetMint, 
+        return this.bidctr.makePlaceOrderInstr(this.cAssetMint, 
             {
                 side : "sell",
                 orderType : "postOnly",
@@ -81,7 +99,7 @@ export class CypherMMClient{
     }
 
     makeMintInstruction(price : number, size : number) : TransactionInstruction{
-        return this.ctr.makeMintCAssetsInstr(this.cAssetMint, size, price);
+        return this.mintctr.makeMintCAssetsInstr(this.cAssetMint, size, price);
     }
 
     getTopSpread(){
@@ -89,7 +107,7 @@ export class CypherMMClient{
     }
 
     makeSettleFundsInstruction(){
-        return this.ctr.makeSettleFundsInstr(this.cAssetMint);
+        return this.bidctr.makeSettleFundsInstr(this.cAssetMint);
     }
 
     async makeCancelAllOrdersInstructions(orders : Order[]) : Promise<TransactionInstruction[]>{
@@ -101,14 +119,14 @@ export class CypherMMClient{
             (order) =>
         {
             ixs.push(
-                this.ctr.makeCancelOrderInstr(this.cAssetMint, order)
+                this.bidctr.makeCancelOrderInstr(this.cAssetMint, order)
             )
         });
         return ixs;
     }
 
-    async getOutOrdersInfo() : Promise<OutOrdersInfo>{
-        const orders = await this.ctr.user.getMarketOrders(this.ctr.client, this.cAssetMint);
+    async getOutOrdersInfo(ctr : CypherUserController) : Promise<OutOrdersInfo>{
+        const orders = await ctr.user.getMarketOrders(ctr.client, this.cAssetMint);
         let bidsize = 0, bidprice = 0, asksize = 0, askprice = 0;
         orders.map(
             (order) =>
@@ -133,8 +151,13 @@ export class CypherMMClient{
         
         
     }
-    async getPosition(){
 
+    async getPositionLong(){
+        return this.bidctr.user.getTokenViewer(this.bidctr.client, this.cAssetMint).deposits;
+    }
+
+    async getPositionMinted(){
+        return this.mintctr.user.getMarketViewer(this.mintctr.client, this.cAssetMint).debtSharesCirculating;
     }
 
 }

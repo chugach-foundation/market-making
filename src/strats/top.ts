@@ -3,7 +3,7 @@ import { CypherMMClient } from "src/mm_client";
 import {MM_Strat} from "./mmstrat"
 import { MM_Hyperparams } from "./stypes";
 import {Transaction, TransactionInstruction} from "@solana/web3.js"
-import { wait } from "../utils";
+import { wait, FastTXNBuilder} from "../utils";
 import { connection } from "@project-serum/common";
 import { loadPayer } from "src/utils";
 import { Order } from "@project-serum/serum/lib/market";
@@ -49,11 +49,13 @@ export class TopOfBookStrat implements MM_Strat{
             qask +=.01
         }
         const ixs = []
-        const ixs2 = []
+        const singers = []
         let bidix : TransactionInstruction;
         let mintix : TransactionInstruction;
         //const mintix = this.mclient.makeAskInstruction(qask, size);
-        const oinfo = await this.mclient.getOutOrdersInfo();
+
+        //TODO -- Modify this segment to avoid checking if buy and if sell now that we've separated into two accounts
+        let oinfo = await this.mclient.getOutOrdersInfo(this.mclient.bidctr);
         const bidsize = size, asksize = size;
         let toCancel : Order[] = []
 
@@ -64,10 +66,12 @@ export class TopOfBookStrat implements MM_Strat{
             const dif = bidsize - oinfo.bidSize;
             if(dif > .1){
                 bidix = this.mclient.makeBidInstruction(qbid, dif);
+                //singers.push(this.mclient.bidPayer);
             }  
         }
         else{
             bidix = this.mclient.makeBidInstruction(qbid, bidsize);
+            //singers.push(this.mclient.bidPayer);
             oinfo.orders.map(
                 (order) => 
                 {
@@ -75,7 +79,7 @@ export class TopOfBookStrat implements MM_Strat{
                 }
             )
         }
-
+        oinfo = await this.mclient.getOutOrdersInfo(this.mclient.mintctr);
         if(oinfo.askPrice == qask || oinfo.askPrice == qask + .01){
             //Don't frontrun self, but check if we need to reinforce the order
             //Add the fraction missing cuz queue priority
@@ -94,47 +98,22 @@ export class TopOfBookStrat implements MM_Strat{
                 }
             )
         }
-        //TODO - Separate this logic into a TXNBuilder class
-
-        if(bidix) ixs.push(bidix);
-        if(mintix) ixs.push(mintix);
-
-        (await this.mclient.makeCancelAllOrdersInstructions(toCancel)).map(
-            (ix) =>
-        {
-            ixs2.push(ix)
-        });
-        const six = this.mclient.makeSettleFundsInstruction();
-        const txn = new Transaction();
-        ixs2.map((ix)=>
-        {
-            txn.add(ix);
-        });
-        txn.add(six);
-        ixs.map((ix)=>
-        {
-            txn.add(ix);
-        });
+        singers.push(this.mclient.mintPayer);
+        singers.push(this.mclient.bidPayer);
+        const builder = new FastTXNBuilder(this.mclient.mintPayer, this.mclient.connection, singers);
         
-        if(txn.instructions.length <= 1){
+        if(toCancel.length) builder.add(await this.mclient.makeCancelAllOrdersInstructions(toCancel));
+        if(bidix) builder.add(bidix);
+        if(mintix) builder.add(mintix);
+        const six = this.mclient.makeSettleFundsInstruction();
+        builder.add(six);
+        
+        if(builder.ixs.length <= 1){
             return "SKIPPING TXN: NO UPDATES REQUIRED";
         } 
-
-        const connection = this.mclient.connection;
-        const payer = this.mclient.payer;
-        txn.feePayer = payer.publicKey
-        txn.recentBlockhash = (
-            await connection.getRecentBlockhash("processed")
-        ).blockhash;
-
-        txn.partialSign(payer)
-        const stxn = txn.serialize();
-        const txh = await connection.sendRawTransaction(stxn, 
-            {
-                skipPreflight : true,
-                preflightCommitment : "processed"
-            });
-        await connection.confirmTransaction(txh, "processed");
+        const {execute} = await builder.build();
+        const txh = await execute();
+        await this.mclient.connection.confirmTransaction(txh, "processed");
         return txh;
     }
     

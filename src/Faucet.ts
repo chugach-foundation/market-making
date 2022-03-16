@@ -112,8 +112,12 @@ async function marketMaker() {
 	console.log(provider.wallet.publicKey.toString());
 	//console.log("minting...");
 	while(true){
-		console.log(mint(cont, cAssetMint, 1500, 10));
-		await wait(100);
+		try{
+			console.log(mint(cont, cAssetMint, 1500, 10));
+		}
+		finally{
+			await wait(100);
+		}
 	}
 	
 	/*console.log(await cont.placeOrder(cAssetMint, 

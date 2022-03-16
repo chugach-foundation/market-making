@@ -10,7 +10,7 @@ export class LiveMarket
     market: Market
     private connection : Connection
     bids: Orderbook
-    constructor(connection, market : Market){
+    constructor(connection : Connection, market : Market){
         this.connection = connection;
         this.market = market;  
     }
