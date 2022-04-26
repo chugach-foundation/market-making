@@ -15,7 +15,7 @@ import { PermissionedMarket } from "@chugach-foundation/cypher-client/src/middle
 import { EventMap } from "@chugach-foundation/cypher-client";
 //Literally just a copypaste... Let's talk about an actual solution to creating instructions later...
 export class CypherUserController {
-    private eventListeners: {[key in UI_EVENT]: number};
+    private eventListeners: { [key in UI_EVENT]: number };
 
     constructor(
         public client: CypherClient,
@@ -180,8 +180,9 @@ export class CypherUserController {
         );
     }
 
-    async depositCollateral(cAssetMint: PublicKey, uiAmount: number) {
-        const amount = TokenAmount.toSplUSDCAmount(uiAmount);
+    /// adjsuted for new client lib
+    async depositCollateral(cAssetMint: PublicKey, uiAmount: number, decimals: number) {
+        const amount = TokenAmount.uiToSplAmount(uiAmount, decimals);
         const token = this.group.getCypherToken(this.client, cAssetMint);
         this.group.getCypherMarket(this.client, cAssetMint);
         return this.client.program.rpc.depositMintCollateral(
@@ -201,8 +202,9 @@ export class CypherUserController {
         );
     }
 
-    async withdrawCollateral(cAssetMint: PublicKey, uiAmount: number) {
-        const amount = TokenAmount.toSplUSDCAmount(uiAmount);
+    /// adjsuted for new client lib
+    async withdrawCollateral(cAssetMint: PublicKey, uiAmount: number, decimals: number) {
+        const amount = TokenAmount.uiToSplAmount(uiAmount, decimals);
         const token = this.group.getCypherToken(this.client, cAssetMint);
         this.group.getCypherMarket(this.client, cAssetMint);
         return this.client.program.rpc.withdrawMintCollateral(
@@ -222,13 +224,17 @@ export class CypherUserController {
         );
     }
 
+    /// adjsuted for new client lib
     makeMintCAssetsInstr(
         cAssetMint: PublicKey,
         uiAmount: number,
-        uiPrice: number
+        decimals: number,
+        uiPrice: number,
+        baseDecimals: number,
+        quoteDecimals: number
     ): TransactionInstruction {
-        const amount = TokenAmount.toSplCAssetAmount(uiAmount);
-        const price = TokenAmount.toSplCAssetPrice(uiPrice);
+        const amount = TokenAmount.uiToSplAmount(uiAmount, decimals);
+        const price = TokenAmount.uiToSplPrice(uiPrice, baseDecimals, quoteDecimals);
         const token = this.group.getCypherToken(this.client, cAssetMint);
         const market = this.group.getCypherMarket(this.client, cAssetMint);
         const marketProxy = this.group.getMarketProxy(this.client, cAssetMint);
@@ -262,10 +268,14 @@ export class CypherUserController {
         });
     }
 
+    /// adjsuted for new client lib
     async mintCAssets(
         cAssetMint: PublicKey,
         uiAmount: number,
-        uiPrice: number
+        decimals: number,
+        uiPrice: number,
+        baseDecimals: number,
+        quoteDecimals: number
     ) {
         const tx = new Transaction();
         const tokenIdx = this.group.gettokenIdx(
@@ -289,14 +299,21 @@ export class CypherUserController {
         const mintInstr = this.makeMintCAssetsInstr(
             cAssetMint,
             uiAmount,
-            uiPrice
+            decimals,
+            uiPrice,
+            baseDecimals,
+            quoteDecimals
         );
         tx.add(mintInstr);
         return this.client.provider.send(tx);
     }
 
-    async burnCAssets(cAssetMint: PublicKey, uiAmount: number) {
-        const amount = TokenAmount.toSplCAssetAmount(uiAmount);
+
+    /// may need to change this because we no longer burn out of margin account. one will just burn cAssets
+    /// from the collateral deposited on the minter vaults
+    /// this might change how you handle sending txs from one margin account to another
+    async burnCAssets(cAssetMint: PublicKey, uiAmount: number, decimals: number) {
+        const amount = TokenAmount.uiToSplAmount(uiAmount, decimals);
         const token = this.group.getCypherToken(this.client, cAssetMint);
         const market = this.group.getCypherMarket(this.client, cAssetMint);
         return this.client.program.rpc.burnCAssets(amount, {
@@ -313,8 +330,9 @@ export class CypherUserController {
         });
     }
 
-    async depositUSDCToMarginAccount(uiAmount: number) {
-        const amount = TokenAmount.toSplUSDCAmount(uiAmount);
+    /// adjsuted for new client lib
+    async depositUSDCToMarginAccount(uiAmount: number, decimals: number) {
+        const amount = TokenAmount.uiToSplAmount(uiAmount, decimals);
         return this.client.program.rpc.depositUsdcToMarginAccount(amount, {
             accounts: {
                 cypherGroup: this.group.address,
@@ -327,8 +345,9 @@ export class CypherUserController {
         });
     }
 
-    async withdrawUSDCFromMarginAccount(uiAmount: number) {
-        const amount = TokenAmount.toSplUSDCAmount(uiAmount);
+    /// adjsuted for new client lib
+    async withdrawUSDCFromMarginAccount(uiAmount: number, decimals: number) {
+        const amount = TokenAmount.uiToSplAmount(uiAmount, decimals);
         return this.client.program.rpc.withdrawUsdcFromMarginAccount(amount, {
             accounts: {
                 cypherGroup: this.group.address,
