@@ -1,72 +1,80 @@
-import {Market, Orderbook} from "@project-serum/serum"
-import { InferencePriority } from "typescript"
-import {listenToAsks, listenToBids} from "./serumlisteners"
-import {handleAsks, OrderBookInfo, handleBids} from "./orderbookhandlers"
-import{Connection, AccountChangeCallback} from "@solana/web3.js"
+import { Connection } from "@solana/web3.js"
+import {
+    Market,
+    Orderbook
+} from "@project-serum/serum"
+import {
+    listenToAsks,
+    listenToBids
+} from "./serumlisteners"
+import {
+    handleAsks,
+    OrderBookInfo,
+    handleBids
+} from "./orderbookhandlers"
 
-export class LiveMarket
-{
-    private info : OrderBookInfo
+export class LiveMarket {
+    private info: OrderBookInfo
     market: Market
-    private connection : Connection
+    private connection: Connection
     bids: Orderbook
-    constructor(connection : Connection, market : Market){
+    constructor(connection: Connection, market: Market) {
         this.connection = connection;
-        this.market = market;  
+        this.market = market;
     }
 
-    private async prePopulate(){
+    private async prePopulate() {
         const [bids, asks] = await Promise.all([this.market.loadBids(this.connection), this.market.loadAsks(this.connection)]);
-        this.info = {bids, asks}
+        this.info = { bids, asks }
     }
 
-    
 
-    printBook(){
+
+    printBook() {
         let [bids, asks] = [this.getBids(), this.getAsks()]
-    // full orderbook data
-    for (let order of bids) {
-        console.log('orderID: ' + order.orderId
-            + ' | price: ' + order.price
-            + ' | size: ' + order.size
-            + ' | side: ' + order.side);
+        // full orderbook data
+        for (let order of bids) {
+            console.log('orderID: ' + order.orderId
+                + ' | price: ' + order.price
+                + ' | size: ' + order.size
+                + ' | side: ' + order.side);
+        }
+
+        console.log('-------------------------------------------------');
+
+        // Full orderbook data
+        for (let order of asks) {
+            console.log('orderID: ' + order.orderId
+                + ' | price: ' + order.price
+                + ' | size: ' + order.size
+                + ' | side: ' + order.side);
+        }
+        console.log('-------------------------------------------------');
     }
 
-    console.log('-------------------------------------------------');
-
-    // Full orderbook data
-    for (let order of asks) {
-        console.log('orderID: ' + order.orderId
-            + ' | price: ' + order.price
-            + ' | size: ' + order.size
-            + ' | side: ' + order.side);
-    }
-    console.log('-------------------------------------------------');
-    }
-
-    async start(acb : (info: OrderBookInfo) => void){
+    async start(acb: (info: OrderBookInfo) => void) {
         await this.prePopulate();
         listenToAsks(this.connection, this.market, handleAsks(this.market, this.info, acb));
         listenToBids(this.connection, this.market, handleBids(this.market, this.info, acb));
     }
-    
-    getAsks(){
+
+    getAsks() {
         return this.info.asks;
     }
 
-    getBids(){
+    getBids() {
         return this.info.bids;
     }
 
-    getTopSpread(){
+    getTopSpread() {
         return [this.getTopBid(), this.getTopAsk()];
     }
 
-    getTopAsk(){
+    getTopAsk() {
         return this.getAsks().getL2(1)[0][0];
     }
 
-    getTopBid(){
+    getTopBid() {
         return this.getBids().getL2(1)[0][0];
     }
 }

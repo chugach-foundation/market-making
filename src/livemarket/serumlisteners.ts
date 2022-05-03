@@ -1,6 +1,8 @@
+import {
+  AccountChangeCallback,
+  Connection
+} from "@solana/web3.js";
 import { Market } from "@project-serum/serum";
-import { AccountChangeCallback, Connection } from "@solana/web3.js";
-
 
 export const listenToBids = (
   connection: Connection,

@@ -1,16 +1,27 @@
 
-import { CONFIGS, CypherClient, CypherGroup } from "@chugach-foundation/cypher-client";
-import { PublicKey, Connection } from "@solana/web3.js";
+import {
+    PublicKey,
+    Connection,
+    Keypair,
+    TransactionInstruction
+} from "@solana/web3.js";
 import { Market } from "@project-serum/serum";
 import { LiveMarket } from "./livemarket/live_market";
-import { CypherUserController } from "@chugach-foundation/cypher-client";
 import { loadPayer } from "./utils";
-import { Keypair, TransactionInstruction } from "@solana/web3.js"
 import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
 import { Order } from "@project-serum/serum/lib/market";
 import { BN } from "@project-serum/anchor";
-import { Cluster } from "@chugach-foundation/cypher-client";
-import { uiToSplAmount, uiToSplPrice } from "@chugach-foundation/cypher-client/lib/utils/tokenAmount";
+import {
+    CONFIGS,
+    Cluster,
+    CypherClient,
+    CypherGroup,
+    CypherUserController
+} from "@chugach-foundation/cypher-client";
+import {
+    uiToSplAmount,
+    uiToSplPrice
+} from "@chugach-foundation/cypher-client/lib/utils/tokenAmount";
 
 
 const u64_max = new BN("18446744073709551615");
@@ -47,10 +58,10 @@ export class CypherMMClient {
         this.mintctr = mintctr ?? bidctr;
     }
 
-    static async load(cAssetMint : PublicKey, cluster: Cluster, rpc: string, groupAddr: PublicKey, bidderKeyPath: string, minterKeyPath?: string): Promise<CypherMMClient> {
+    static async load(cAssetMint: PublicKey, cluster: Cluster, rpc: string, groupAddr: PublicKey, bidderKeyPath: string, minterKeyPath?: string): Promise<CypherMMClient> {
         const connection = new Connection(rpc, "processed")
-        
-        
+
+
 
 
         const bidk = loadPayer(bidderKeyPath);
@@ -60,7 +71,7 @@ export class CypherMMClient {
         const group = await CypherGroup.load(bidclient, groupAddr);
         const dexkey = group.getDexMarket(cAssetMint).address;
 
-        const cInfo : cAssetMarketInfo = {
+        const cInfo: cAssetMarketInfo = {
             cAssetMarketProgramAddress: CONFIGS.devnet.DEX_PID,
             cAssetOrderbookAddress: dexkey,
             cAssetMint: cAssetMint
@@ -111,14 +122,14 @@ export class CypherMMClient {
 
     async makeAskInstruction(price: number, size: number): Promise<TransactionInstruction> {
         return await this.bidctr.makeNewOrderV3Instr(
-                this.cAssetMint,
-                "sell",
-                uiToSplPrice(price, basedecimals, quotedecimals),
-                uiToSplAmount(size, basedecimals),
-                u64_max,
-                "postOnly",
-                "decrementTake"
-            );
+            this.cAssetMint,
+            "sell",
+            uiToSplPrice(price, basedecimals, quotedecimals),
+            uiToSplAmount(size, basedecimals),
+            u64_max,
+            "postOnly",
+            "decrementTake"
+        );
     }
 
     /// adjsuted for new client lib
@@ -174,11 +185,11 @@ export class CypherMMClient {
 
     }
 
-    async getPositionLong() : Promise<BN> {
+    async getPositionLong(): Promise<BN> {
         return this.bidctr.user.getTokenViewer(this.cAssetMint).deposits;
     }
 
-    async getPositionMinted() : Promise<BN> {
+    async getPositionMinted(): Promise<BN> {
         return this.mintctr.user.getMarketViewer(this.cAssetMint).debtSharesCirculating;
     }
 

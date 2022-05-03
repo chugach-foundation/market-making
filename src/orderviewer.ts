@@ -2,26 +2,32 @@ import {
     PublicKey,
     Connection,
 } from "@solana/web3.js";
-import { Market } from "@project-serum/serum/lib/market";
-import {LiveMarket } from "./livemarket/live_market";
-import { Cluster, CONFIGS, CypherClient, CypherGroup, CypherUserController } from "@chugach-foundation/cypher-client";
 import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
+import { Market } from "@project-serum/serum/lib/market";
 import { loadPayer } from "./utils";
+import { LiveMarket } from "./livemarket/live_market";
+import {
+    Cluster,
+    CONFIGS,
+    CypherClient,
+    CypherGroup,
+    CypherUserController
+} from "@chugach-foundation/cypher-client";
+
 const interval = 1000
 const control = { isRunning: true, interval: interval };
 
 let connection = new Connection('https://psytrbhymqlkfrhudd.dev.genesysgo.net:8899/', "processed");
-    console.log('connection made: ' + connection.toString());
+console.log('connection made: ' + connection.toString());
 
 export const wait = (delayMS: number) =>
-  new Promise((resolve) => setTimeout(resolve, delayMS));
+    new Promise((resolve) => setTimeout(resolve, delayMS));
 
 
-async function getOrderbookData(cAssetMarket : PublicKey) {
+async function getOrderbookData(cAssetMarket: PublicKey) {
     let market = await Market.load(connection, cAssetMarket, {}, CONFIGS.devnet.DEX_PID);
     const livemarket = new LiveMarket(connection, market);
-    await livemarket.start((info) => 
-    {
+    await livemarket.start((info) => {
         livemarket.printBook();
     });
     livemarket.printBook();
@@ -31,15 +37,15 @@ async function getOrderbookData(cAssetMarket : PublicKey) {
     }
 }
 
-async function run(){
+async function run() {
 
-    let cluster : Cluster = "devnet";
+    let cluster: Cluster = "devnet";
     let bidk = loadPayer(process.env.CKEY);
-    let groupAddr : PublicKey = new PublicKey("7aDJqXVTexwugfKypP4zi4yncUkhoJDZLrZ2K9unRqu7");
-    
+    let groupAddr: PublicKey = new PublicKey("7aDJqXVTexwugfKypP4zi4yncUkhoJDZLrZ2K9unRqu7");
+
     const bidclient = new CypherClient(cluster, new NodeWallet(bidk), { commitment: "processed", skipPreflight: true });
-    
-    
+
+
     const bidctr = await CypherUserController.loadOrCreate(bidclient, groupAddr);
     const group = await CypherGroup.load(bidclient, groupAddr);
     let cAssetMint = group.cAssetMints[5];
