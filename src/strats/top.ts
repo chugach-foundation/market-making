@@ -65,12 +65,12 @@ export class TopOfBookStrat implements MM_Strat{
             qbid = oinfo.bidPrice;
             const dif = bidsize - oinfo.bidSize;
             if(dif > .1){
-                bidix = this.mclient.makeBidInstruction(qbid, dif);
+                bidix = await this.mclient.makeBidInstruction(qbid, dif);
                 //singers.push(this.mclient.bidPayer);
             }  
         }
         else{
-            bidix = this.mclient.makeBidInstruction(qbid, bidsize);
+            bidix = await this.mclient.makeBidInstruction(qbid, bidsize);
             //singers.push(this.mclient.bidPayer);
             oinfo.orders.map(
                 (order) => 
@@ -86,11 +86,11 @@ export class TopOfBookStrat implements MM_Strat{
             qask = oinfo.askPrice;
             const dif = asksize - oinfo.askSize;
             if(dif > .1){
-                mintix = this.mclient.makeMintInstruction(qask, dif);
+                mintix = await this.mclient.makeMintInstruction(qask, dif);
             }
         }
         else{
-            mintix = this.mclient.makeMintInstruction(qask, asksize);
+            mintix = await this.mclient.makeMintInstruction(qask, asksize);
             oinfo.orders.map(
                 (order) =>
                 {
@@ -105,7 +105,7 @@ export class TopOfBookStrat implements MM_Strat{
         if(toCancel.length) builder.add(await this.mclient.makeCancelAllOrdersInstructions(toCancel));
         if(bidix) builder.add(bidix);
         if(mintix) builder.add(mintix);
-        const six = this.mclient.makeSettleFundsInstruction();
+        const six = await this.mclient.makeSettleFundsInstruction();
         builder.add(six);
         
         if(builder.ixs.length <= 1){

@@ -17,8 +17,8 @@ export const wait = (delayMS: number) =>
   new Promise((resolve) => setTimeout(resolve, delayMS));
 
 
-async function getOrderbookData() {
-    let market = await Market.load(connection, cAssetMint, {}, CONFIGS.devnet.DEX_PID);
+async function getOrderbookData(cAssetMarket : PublicKey) {
+    let market = await Market.load(connection, cAssetMarket, {}, CONFIGS.devnet.DEX_PID);
     const livemarket = new LiveMarket(connection, market);
     await livemarket.start((info) => 
     {
@@ -31,20 +31,23 @@ async function getOrderbookData() {
     }
 }
 
-async function run{
-    
-
+async function run(){
 
     let cluster : Cluster = "devnet";
     let bidk = loadPayer(process.env.CKEY);
-    let groupAddr : PublicKey;
-    let cAssetMint : PublicKey = process.env.CASSETMINT ?? ;
+    let groupAddr : PublicKey = new PublicKey("7aDJqXVTexwugfKypP4zi4yncUkhoJDZLrZ2K9unRqu7");
+    
     const bidclient = new CypherClient(cluster, new NodeWallet(bidk), { commitment: "processed", skipPreflight: true });
+    
+    
     const bidctr = await CypherUserController.loadOrCreate(bidclient, groupAddr);
     const group = await CypherGroup.load(bidclient, groupAddr);
-    let cAssetMarket = new PublicKey("8eTZf8a3CUHkuNC9LtAvCnmiPJN5bh2hxk8cDg53vjQU")
+    let cAssetMint = group.cAssetMints[5];
+    console.log(group.cAssetMints)
+    let cAssetMarket = group.getDexMarket(cAssetMint).address;
     let programAddress = new PublicKey('DsGUdHQY2EnvWbN5VoSZSyjL4EWnStgaJhFDmJV34GQQ');
     console.log('cAssetMint: ' + cAssetMint.toString() + ' | ' + 'programAddress: ' + programAddress.toString());
-    getOrderbookData();
+    console.log(`Market address : ${cAssetMarket.toString()}`)
+    getOrderbookData(cAssetMarket);
 }
-
+run();

@@ -10,10 +10,13 @@ import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
 import { Order } from "@project-serum/serum/lib/market";
 import { BN } from "@project-serum/anchor";
 import { Cluster } from "@chugach-foundation/cypher-client";
+import { uiToSplAmount, uiToSplPrice } from "@chugach-foundation/cypher-client/lib/utils/tokenAmount";
 
 
 const u64_max = new BN("18446744073709551615");
 
+const quotedecimals = 4;
+const basedecimals = 4;
 export type cAssetMarketInfo = {
     cAssetMarketProgramAddress: PublicKey,
     cAssetOrderbookAddress: PublicKey,
@@ -98,20 +101,20 @@ export class CypherMMClient {
         return await this.bidctr.makeNewOrderV3Instr(
             this.cAssetMint,
             "buy",
-            new BN(price),
-            new BN(size),
+            uiToSplPrice(price, basedecimals, quotedecimals),
+            uiToSplAmount(size, basedecimals),
             u64_max,
             "postOnly",
             "decrementTake"
         );
     }
 
-    async makeAskInstruction(price: BN, size: BN): Promise<TransactionInstruction> {
+    async makeAskInstruction(price: number, size: number): Promise<TransactionInstruction> {
         return await this.bidctr.makeNewOrderV3Instr(
                 this.cAssetMint,
                 "sell",
-                price,
-                size,
+                uiToSplPrice(price, basedecimals, quotedecimals),
+                uiToSplAmount(size, basedecimals),
                 u64_max,
                 "postOnly",
                 "decrementTake"
@@ -119,8 +122,8 @@ export class CypherMMClient {
     }
 
     /// adjsuted for new client lib
-    async makeMintInstruction(price: BN, size: BN, decimals: number, baseDecimals: number, quoteDecimals: number): Promise<TransactionInstruction> {
-        return await this.mintctr.makeMintAndSellInstr(this.cAssetMint, price, size);
+    async makeMintInstruction(price: number, size: number): Promise<TransactionInstruction> {
+        return await this.mintctr.makeMintAndSellInstr(this.cAssetMint, uiToSplPrice(price, basedecimals, quotedecimals), uiToSplAmount(size, basedecimals));
     }
 
     getTopSpread() {
