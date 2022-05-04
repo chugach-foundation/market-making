@@ -26,8 +26,6 @@ import {
 
 const u64_max = new BN("18446744073709551615");
 
-const quotedecimals = 4;
-const basedecimals = 4;
 export type cAssetMarketInfo = {
     cAssetMarketProgramAddress: PublicKey,
     cAssetOrderbookAddress: PublicKey,
@@ -49,13 +47,22 @@ export class CypherMMClient {
     mintctr: CypherUserController
     private cAssetMint: PublicKey
     connection: Connection
+    private baseLotSize : BN
+    private quoteLotSize : BN
+    private quoteDecimals : number
+    private baseDecimals : number
 
-    private constructor(cInfo: cAssetMarketInfo, lmarket: LiveMarket, connection: Connection, bidctr: CypherUserController, mintctr?: CypherUserController) {
+    private constructor(cInfo: cAssetMarketInfo, lmarket: LiveMarket, connection: Connection, baseDecimals : number, bidctr: CypherUserController, mintctr?: CypherUserController) {
         this.cAssetMint = cInfo.cAssetMint;
         this.lmarket = lmarket;
         this.connection = connection;
         this.bidctr = bidctr;
         this.mintctr = mintctr ?? bidctr;
+        this.baseLotSize = new BN(lmarket.market.decoded.baseLotSize);
+        this.quoteLotSize = new BN(lmarket.market.decoded.quoteLotSize);
+        //HARDCODED RANDOM DECIMAL!!
+        this.quoteDecimals = 6;
+        this.baseDecimals = baseDecimals;
     }
 
     static async load(cAssetMint: PublicKey, cluster: Cluster, rpc: string, groupAddr: PublicKey, bidderKeyPath: string, minterKeyPath?: string): Promise<CypherMMClient> {
@@ -88,14 +95,14 @@ export class CypherMMClient {
         );
 
         await lmarket.start((info) => { });
-
+        const baseDecimals = group.getTokenViewer(cAssetMint).decimals;
         if (minterKeyPath) {
             const mintk = loadPayer(minterKeyPath);
             const mintctr = await CypherUserController.loadOrCreate(new CypherClient(cluster, new NodeWallet(mintk), { commitment: "processed", skipPreflight: true }), groupAddr);
-            return new CypherMMClient(cInfo, lmarket, connection, bidctr.userController, mintctr.userController);
+            return new CypherMMClient(cInfo, lmarket, connection, baseDecimals, bidctr.userController, mintctr.userController);
         }
         else {
-            return new CypherMMClient(cInfo, lmarket, connection, bidctr.userController);
+            return new CypherMMClient(cInfo, lmarket, connection, baseDecimals, bidctr.userController);
         }
 
     }
@@ -109,11 +116,18 @@ export class CypherMMClient {
     }
 
     async makeBidInstruction(price: number, size: number): Promise<TransactionInstruction> {
+        let pricebn = uiToSplPrice(price, this.quoteDecimals, this.baseDecimals);
+        let amountbn = uiToSplAmount(size, this.quoteDecimals);
+        pricebn = pricebn.mul(this.baseLotSize).div(this.quoteLotSize);
+        amountbn = amountbn.div(this.baseLotSize);
+        
+        
+        
         return await this.bidctr.makeNewOrderV3Instr(
             this.cAssetMint,
             "buy",
-            uiToSplPrice(price, basedecimals, quotedecimals),
-            uiToSplAmount(size, basedecimals),
+            pricebn,
+            amountbn,
             u64_max,
             "postOnly",
             "decrementTake"
@@ -121,11 +135,16 @@ export class CypherMMClient {
     }
 
     async makeAskInstruction(price: number, size: number): Promise<TransactionInstruction> {
+        let pricebn = uiToSplPrice(price, this.quoteDecimals, this.baseDecimals);
+        let amountbn = uiToSplAmount(size, this.quoteDecimals);
+        pricebn = pricebn.mul(this.baseLotSize).div(this.quoteLotSize);
+        amountbn = amountbn.div(this.baseLotSize);
+        this.bidctr.p
         return await this.bidctr.makeNewOrderV3Instr(
             this.cAssetMint,
             "sell",
-            uiToSplPrice(price, basedecimals, quotedecimals),
-            uiToSplAmount(size, basedecimals),
+            pricebn,
+            amountbn,
             u64_max,
             "postOnly",
             "decrementTake"
@@ -134,7 +153,7 @@ export class CypherMMClient {
 
     /// adjsuted for new client lib
     async makeMintInstruction(price: number, size: number): Promise<TransactionInstruction> {
-        return await this.mintctr.makeMintAndSellInstr(this.cAssetMint, uiToSplPrice(price, basedecimals, quotedecimals), uiToSplAmount(size, basedecimals));
+        return await this.mintctr.makeMintAndSellInstr(this.cAssetMint, uiToSplPrice(price, this.quoteDecimals, this.baseDecimals), uiToSplAmount(size, this.quoteDecimals));
     }
 
     getTopSpread() {
