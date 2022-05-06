@@ -1,14 +1,13 @@
 import * as anchor from "@project-serum/anchor";
 import { connection, sleep } from "@project-serum/common";
-import { CypherClient, CONFIGS, CAssetPubkeys, GroupPubkeys} from "@chugach-foundation/cypher-client";
-import {PublicKey} from "@solana/web3.js";
-import {Market} from "@project-serum/serum"
+import { CypherClient, CONFIGS } from "@chugach-foundation/cypher-client";
+import { PublicKey } from "@solana/web3.js";
+import { Market } from "@project-serum/serum"
 import { LiveMarket } from "./livemarket/live_market";
-import {CypherUserController} from "./mmuser"
-import {Transaction} from "@solana/web3.js"
+import { Transaction } from "@solana/web3.js"
 
 export const wait = (delayMS: number) =>
-  new Promise((resolve) => setTimeout(resolve, delayMS));
+	new Promise((resolve) => setTimeout(resolve, delayMS));
 
 async function mint(
 	minter: CypherUserController,
@@ -27,8 +26,8 @@ async function buy(
 	price: number,
 	size: number
 ) {
-    await trader.faucetUSDC(price * size * 2);
-    await trader.depositUSDCToMarginAccount(price * size * 2);
+	await trader.faucetUSDC(price * size * 2);
+	await trader.depositUSDCToMarginAccount(price * size * 2);
 	await trader.placeOrderAndSettle(cAssetMint, {
 		side: "buy",
 		price,
@@ -38,58 +37,55 @@ async function buy(
 	});
 }
 
-async function quoteTop(lmarket : LiveMarket, provider : anchor.Provider, ctr : CypherUserController, mint : PublicKey){
+async function quoteTop(lmarket: LiveMarket, provider: anchor.Provider, ctr: CypherUserController, mint: PublicKey) {
 	const size = 100;
 	let tbid, task;
-	try{
+	try {
 		[tbid, task] = lmarket.getTopSpread();
 	}
-	catch(e){
+	catch (e) {
 		[tbid, task] = [1, 1000000];
 	}
-	
+
 	let [qbid, qask] = [tbid + .01, task - .01];
-	if(qbid >= qask){
-		qbid -=.01;
-		qask +=.01
+	if (qbid >= qask) {
+		qbid -= .01;
+		qask += .01
 	}
 	//inefficient af... fix
 	const toCancel = await ctr.user.getMarketOrders(ctr.client, mint);
 	console.log(toCancel.length);
 	const ixs = []
 	const ixs2 = []
-	const bidix = ctr.makePlaceOrderInstr(mint, 
+	const bidix = ctr.makePlaceOrderInstr(mint,
 		{
-			side : "buy",
-			orderType : "postOnly",
-			price : qbid,
-			size : size,
-			selfTradeBehavior : "decrementTake"
+			side: "buy",
+			orderType: "postOnly",
+			price: qbid,
+			size: size,
+			selfTradeBehavior: "decrementTake"
 		})
 	const mintix = ctr.makeMintCAssetsInstr(mint, size, qask);
 	ixs.push(bidix, mintix)
 	toCancel.map(
-		(order) =>
-	{
-		ixs2.push(
-			ctr.makeCancelOrderInstr(mint, order)
-		)
-	});
+		(order) => {
+			ixs2.push(
+				ctr.makeCancelOrderInstr(mint, order)
+			)
+		});
 	const six = ctr.makeSettleFundsInstr(mint);
-	
+
 	const txn = new Transaction();
 	//const txn2 = new Transaction();
-	ixs2.map((ix)=>
-	{
+	ixs2.map((ix) => {
 		txn.add(ix);
 	});
 	txn.add(six);
-	ixs.map((ix)=>
-	{
+	ixs.map((ix) => {
 		txn.add(ix);
 	});
-	
-	
+
+
 	//provider.send(txn2);
 	return provider.send(txn);
 }
@@ -97,29 +93,29 @@ async function quoteTop(lmarket : LiveMarket, provider : anchor.Provider, ctr : 
 async function marketMaker() {
 	const provider = anchor.Provider.local("https://psytrbhymqlkfrhudd.dev.genesysgo.net:8899/", {
 		commitment: "processed",
-		skipPreflight : true
+		skipPreflight: true
 	});
 	let cAssetMarket = new PublicKey("8eTZf8a3CUHkuNC9LtAvCnmiPJN5bh2hxk8cDg53vjQU");
 
 	let programAddress = new PublicKey('DsGUdHQY2EnvWbN5VoSZSyjL4EWnStgaJhFDmJV34GQQ');
 	const connection = provider.connection
-	let market = await Market.load(connection, cAssetMarket, {skipPreflight : true}, programAddress);
+	let market = await Market.load(connection, cAssetMarket, { skipPreflight: true }, programAddress);
 	//market.cancelOrder()
 	//const live = new LiveMarket(provider.connection, market);
-    let cont = await CypherUserController.load(new CypherClient("DEVNET", provider.wallet, provider.opts), GroupPubkeys.DEVNET, "ACCOUNT");
+	let cont = await CypherUserController.load(new CypherClient("DEVNET", provider.wallet, provider.opts), GroupPubkeys.DEVNET, "ACCOUNT");
 	let cAssetMint = CAssetPubkeys.DEVNET[0];
 	//await live.start((info) => {});
 	console.log(provider.wallet.publicKey.toString());
 	//console.log("minting...");
-	while(true){
-		try{
+	while (true) {
+		try {
 			console.log(mint(cont, cAssetMint, 1500, 10));
 		}
-		finally{
+		finally {
 			await wait(100);
 		}
 	}
-	
+
 	/*console.log(await cont.placeOrder(cAssetMint, 
 		{
 			side : "sell",
@@ -129,7 +125,7 @@ async function marketMaker() {
 			selfTradeBehavior : "decrementTake"
 		}));
 		*/
-	
+
 	/*while(true){
 		try{
 
@@ -142,8 +138,8 @@ async function marketMaker() {
 		}
 	}
 	*/
-	
-	
+
+
 }
 
 marketMaker();

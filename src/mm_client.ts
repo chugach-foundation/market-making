@@ -5,6 +5,7 @@ import {
     Keypair,
     TransactionInstruction
 } from "@solana/web3.js";
+import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { Market } from "@project-serum/serum";
 import { LiveMarket } from "./livemarket/live_market";
 import { loadPayer } from "./utils";
@@ -25,6 +26,7 @@ import {
 
 
 const u64_max = new BN("18446744073709551615");
+const DEX_TAKER_FEE = 0.0004;
 
 export type cAssetMarketInfo = {
     cAssetMarketProgramAddress: PublicKey,
@@ -47,19 +49,19 @@ export class CypherMMClient {
     mintctr: CypherUserController
     private cAssetMint: PublicKey
     connection: Connection
-    private baseLotSize : BN
-    private quoteLotSize : BN
-    private quoteDecimals : number
-    private baseDecimals : number
+    private baseLotSize: BN
+    private quoteLotSize: BN
+    private quoteDecimals: number
+    private baseDecimals: number
 
-    private constructor(cInfo: cAssetMarketInfo, lmarket: LiveMarket, connection: Connection, baseDecimals : number, bidctr: CypherUserController, mintctr?: CypherUserController) {
+    private constructor(cInfo: cAssetMarketInfo, lmarket: LiveMarket, connection: Connection, baseDecimals: number, bidctr: CypherUserController, mintctr?: CypherUserController) {
         this.cAssetMint = cInfo.cAssetMint;
         this.lmarket = lmarket;
         this.connection = connection;
         this.bidctr = bidctr;
         this.mintctr = mintctr ?? bidctr;
-        this.baseLotSize = new BN(lmarket.market.decoded.baseLotSize);
-        this.quoteLotSize = new BN(lmarket.market.decoded.quoteLotSize);
+        this.baseLotSize = lmarket.market.decoded.baseLotSize;
+        this.quoteLotSize = lmarket.market.decoded.quoteLotSize;
         //HARDCODED RANDOM DECIMAL!!
         this.quoteDecimals = 6;
         this.baseDecimals = baseDecimals;
@@ -115,56 +117,110 @@ export class CypherMMClient {
         return (this.bidctr.client.anchorProvider.wallet as NodeWallet).payer;
     }
 
+
     async makeBidInstruction(price: number, size: number): Promise<TransactionInstruction> {
-        let pricebn = uiToSplPrice(price, this.quoteDecimals, this.baseDecimals);
-        let amountbn = uiToSplAmount(size, this.quoteDecimals);
-        pricebn = pricebn.mul(this.baseLotSize).div(this.quoteLotSize);
-        amountbn = amountbn.div(this.baseLotSize);
-        
-        
-        
+        let pricebn = uiToSplPrice(price, this.baseDecimals, this.quoteDecimals);
+        let amountbn = uiToSplAmount(size, this.baseDecimals);
+        pricebn = pricebn.mul(this.lmarket.market.decoded.baseLotSize).div(this.lmarket.market.decoded.quoteLotSize);
+        amountbn = amountbn.div(this.lmarket.market.decoded.baseLotSize);
+
         return await this.bidctr.makeNewOrderV3Instr(
             this.cAssetMint,
             "buy",
             pricebn,
             amountbn,
-            u64_max,
+            // @ts-ignore
+            new BN(
+                this.lmarket.market.decoded.quoteLotSize.toNumber() * (1 + DEX_TAKER_FEE) * 10000
+            )
+                .mul(amountbn.mul(pricebn))
+                .div(new BN(10000)),
             "postOnly",
             "decrementTake"
         );
     }
 
     async makeAskInstruction(price: number, size: number): Promise<TransactionInstruction> {
-        let pricebn = uiToSplPrice(price, this.quoteDecimals, this.baseDecimals);
-        let amountbn = uiToSplAmount(size, this.quoteDecimals);
-        pricebn = pricebn.mul(this.baseLotSize).div(this.quoteLotSize);
-        amountbn = amountbn.div(this.baseLotSize);
-        this.bidctr.p
+        let pricebn = uiToSplPrice(price, this.baseDecimals, this.quoteDecimals);
+        let amountbn = uiToSplAmount(size, this.baseDecimals);
+        pricebn = pricebn.mul(this.lmarket.market.decoded.baseLotSize).div(this.lmarket.market.decoded.quoteLotSize);
+        amountbn = amountbn.div(this.lmarket.market.decoded.baseLotSize);
         return await this.bidctr.makeNewOrderV3Instr(
             this.cAssetMint,
             "sell",
             pricebn,
             amountbn,
-            u64_max,
+            // @ts-ignore
+            new BN(
+                this.lmarket.market.decoded.quoteLotSize.toNumber() * (1 + DEX_TAKER_FEE) * 10000
+            )
+                .mul(amountbn.mul(pricebn))
+                .div(new BN(10000)),
             "postOnly",
             "decrementTake"
         );
     }
 
-    /// adjsuted for new client lib
+    async depositMarketCollateralInstr(cAssetMint: PublicKey, amount: BN) {
+        // console.log(
+        //     'Deposit market collateral for CAsset: ',
+        //     cAssetMint.toString()
+        // );
+        // console.log('Amount: ', amount.toNumber());
+        this.mintctr.group.validateMarket(cAssetMint);
+        return await this.mintctr.client.methods
+            // @ts-ignore
+            .depositMarketCollateral(cAssetMint, amount)
+            .accounts({
+                cypherGroup: this.mintctr.group.address,
+                cypherUser: this.mintctr.user.address,
+                cypherPcVault: this.mintctr.group.quoteVault,
+                depositFrom: await this.mintctr.client.getAssociatedUSDCAddress(),
+                userSigner: this.mintctr.client.walletPubkey,
+                tokenProgram: TOKEN_PROGRAM_ID
+            })
+            .instruction();
+    }
+
+    async depositMintCollateralInstruction(price: number, size: number): Promise<TransactionInstruction> {
+        // fix to pull cratio for given markert from onchain program
+        return await this.depositMarketCollateralInstr(this.cAssetMint, uiToSplAmount(price * size * 1.75, this.quoteDecimals))
+    }
+
     async makeMintInstruction(price: number, size: number): Promise<TransactionInstruction> {
-        return await this.mintctr.makeMintAndSellInstr(this.cAssetMint, uiToSplPrice(price, this.quoteDecimals, this.baseDecimals), uiToSplAmount(size, this.quoteDecimals));
+        return await this.mintctr.makeMintAndSellInstr(this.cAssetMint, uiToSplPrice(price, this.baseDecimals, this.quoteDecimals), uiToSplAmount(size, this.baseDecimals));
     }
 
     getTopSpread() {
         return this.lmarket.getTopSpread();
     }
 
-    makeSettleFundsInstruction() {
-        return this.bidctr.makeSettleFundsInstr(this.cAssetMint);
+    async withdrawCollateralInstr(amount: BN) {
+        // console.log('Withdraw collateral, amount: ', amount.toNumber());
+        return await this.mintctr.client.methods
+            //@ts-ignore
+            .withdrawCollateral(amount)
+            .accounts({
+                cypherGroup: this.mintctr.group.address,
+                vaultSigner: this.mintctr.group.vaultSigner,
+                cypherUser: this.mintctr.user.address,
+                cypherPcVault: this.mintctr.group.quoteVault,
+                withdrawTo: await this.mintctr.client.getAssociatedUSDCAddress(),
+                userSigner: this.mintctr.client.walletPubkey,
+                tokenProgram: TOKEN_PROGRAM_ID
+            })
+            .instruction();
     }
 
-    async makeCancelAllOrdersInstructions(orders: Order[]): Promise<TransactionInstruction[]> {
+    makeSettleFundsInstruction() {
+        let ixs = []
+        ixs.push(this.bidctr.makeSettleFundsInstr(this.cAssetMint));
+        ixs.push(this.mintctr.makeSettleFundsInstr(this.cAssetMint));
+        // add instruction to withdraw usdc from minter margin account in order to increase capital efficiency
+        return ixs
+    }
+
+    async makeCancelBidOrdersInstructions(orders: Order[]): Promise<TransactionInstruction[]> {
 
         let ixs = []
         //Fix this inefficient bs -- keep track of orders with ws? -- TODO
@@ -176,6 +232,43 @@ export class CypherMMClient {
                 )
             });
         return ixs;
+    }
+
+    async withdrawMarketCollateralInstr(cAssetMint: PublicKey, amount: BN) {
+        // console.log(
+        //   'Withdraw market collateral for CAsset: ',
+        //   cAssetMint.toString()
+        // );
+        // console.log('Amount: ', amount.toNumber());
+        this.mintctr.group.validateMarket(cAssetMint);
+        return await this.mintctr.client.methods
+            //@ts-ignore
+            .withdrawMarketCollateral(cAssetMint, amount)
+            .accounts({
+                cypherGroup: this.mintctr.group.address,
+                vaultSigner: this.mintctr.group.vaultSigner,
+                cypherUser: this.mintctr.user.address,
+                cypherPcVault: this.mintctr.group.quoteVault,
+                withdrawTo: await this.mintctr.client.getAssociatedUSDCAddress(),
+                userSigner: this.mintctr.client.walletPubkey,
+                tokenProgram: TOKEN_PROGRAM_ID
+            })
+            .instruction();
+    }
+
+    async makeCancelMintOrdersAndWithdrawMktCollateralInstructions(orders: Order[]): Promise<TransactionInstruction[]> {
+
+        let ixs = []
+        //Fix this inefficient bs -- keep track of orders with ws? -- TODO
+        const toCancel = orders;
+        toCancel.map(
+            (order) => {
+                ixs.push(this.mintctr.makeCancelOrderV2Instr(this.cAssetMint, order))
+                ixs.push(this.withdrawMarketCollateralInstr(this.cAssetMint, uiToSplAmount(order.price * order.size * 1.5, this.quoteDecimals)))
+            }
+        );
+        return ixs;
+
     }
 
     async getOutOrdersInfo(ctr: CypherUserController): Promise<OutOrdersInfo> {

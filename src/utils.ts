@@ -53,7 +53,7 @@ export class FastTXNBuilder {
     )
     txn.feePayer = this.payer.publicKey;
     txn.recentBlockhash = (
-      await this.connection.getRecentBlockhash("processed")
+      await this.connection.getLatestBlockhash("processed")
     ).blockhash;
     txn.partialSign(this.payer);
     if (this.singers) {

@@ -1,7 +1,7 @@
 import { PublicKey } from "@solana/web3.js";
 import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
 import { CypherMMClient } from "./mm_client";
-import { loadPayer } from "./utils";
+import { loadPayer, FastTXNBuilder } from "./utils";
 import { MM_Strat } from "./strats/mmstrat";
 import { TopOfBookStrat } from "./strats/top";
 import {
@@ -10,7 +10,6 @@ import {
 	CypherClient,
 	CypherGroup,
 	CypherUserController,
-	TokenAmount
 } from "@chugach-foundation/cypher-client";
 
 export const wait = (delayMS: number) =>
@@ -28,7 +27,6 @@ async function marketMaker() {
 	const bidctr = await CypherUserController.loadOrCreate(bidclient, groupAddr);
 	const group = await CypherGroup.load(bidclient, groupAddr);
 	let cAssetMint = group.cAssetMints[5];
-	console.log(group.cAssetMints)
 	let cAssetMarket = group.getDexMarket(cAssetMint).address;
 	let programAddress = new PublicKey('DsGUdHQY2EnvWbN5VoSZSyjL4EWnStgaJhFDmJV34GQQ');
 
@@ -41,6 +39,22 @@ async function marketMaker() {
 		process.env.CKEYTWO
 	);
 
+	const bidderInitOpenOrdersInstr = await client.bidctr.makeInitOpenOrdersInstr(cAssetMint);
+	const minterInitOpenOrdersInstr = await client.mintctr.makeInitOpenOrdersInstr(cAssetMint);
+	if (bidderInitOpenOrdersInstr || minterInitOpenOrdersInstr) {
+		const singers = []
+		singers.push(client.mintPayer);
+		singers.push(client.bidPayer);
+		const builder = new FastTXNBuilder(client.mintPayer, client.connection, singers);
+
+		builder.add(bidderInitOpenOrdersInstr);
+		builder.add(minterInitOpenOrdersInstr);
+
+		const { execute } = await builder.build();
+		const txh = await execute();
+		await client.connection.confirmTransaction(txh, "confirmed");
+		console.log("txh if initOpenOrdersInstr called: " + txh)
+	}
 
 	const strat: MM_Strat = new TopOfBookStrat(client,
 		{
@@ -48,7 +62,6 @@ async function marketMaker() {
 			time_requote: 10000
 		})
 	strat.start();
-	console.log("Strat started")
+	console.log("Strat started on cAsset: " + cAssetMint)
 }
-
 marketMaker();

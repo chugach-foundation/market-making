@@ -49,7 +49,6 @@ async function run() {
     const bidctr = await CypherUserController.loadOrCreate(bidclient, groupAddr);
     const group = await CypherGroup.load(bidclient, groupAddr);
     let cAssetMint = group.cAssetMints[5];
-    console.log(group.cAssetMints)
     let cAssetMarket = group.getDexMarket(cAssetMint).address;
     let programAddress = new PublicKey('DsGUdHQY2EnvWbN5VoSZSyjL4EWnStgaJhFDmJV34GQQ');
     console.log('cAssetMint: ' + cAssetMint.toString() + ' | ' + 'programAddress: ' + programAddress.toString());
