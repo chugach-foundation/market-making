@@ -58,7 +58,7 @@ async function marketMaker() {
 
 	const strat: MM_Strat = new TopOfBookStrat(client,
 		{
-			max_size: 100,
+			max_size: 10000, // increased size due to low price of sol/eth pair, probably should add market specific sizing
 			time_requote: 10000
 		})
 	strat.start();

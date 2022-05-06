@@ -116,16 +116,13 @@ export class TopOfBookStrat implements MM_Strat {
         const six = await this.mclient.makeSettleFundsInstruction();
         builder.add(six);
 
-        if (builder.ixs.length <= 1) {
+        if (builder.ixs.length <= 2) {
             return "SKIPPING TXN: NO UPDATES REQUIRED";
         }
         console.log(builder.ixs.length)
-        console.log(this.mclient.bidctr.client.cypherPID.toString())
-        console.log(this.mclient.mintctr.client.cypherPID.toString())
         const { execute } = await builder.build();
         const txh = await execute();
         await this.mclient.connection.confirmTransaction(txh, "processed");
         return txh;
     }
-
 }

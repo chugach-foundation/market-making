@@ -212,10 +212,10 @@ export class CypherMMClient {
             .instruction();
     }
 
-    makeSettleFundsInstruction() {
+    async makeSettleFundsInstruction() {
         let ixs = []
-        ixs.push(this.bidctr.makeSettleFundsInstr(this.cAssetMint));
-        ixs.push(this.mintctr.makeSettleFundsInstr(this.cAssetMint));
+        ixs.push(await this.bidctr.makeSettleFundsInstr(this.cAssetMint));
+        ixs.push(await this.mintctr.makeSettleFundsInstr(this.cAssetMint));
         // add instruction to withdraw usdc from minter margin account in order to increase capital efficiency
         return ixs
     }
@@ -226,9 +226,9 @@ export class CypherMMClient {
         //Fix this inefficient bs -- keep track of orders with ws? -- TODO
         const toCancel = orders;
         toCancel.map(
-            (order) => {
+            async (order) => {
                 ixs.push(
-                    this.bidctr.makeCancelOrderV2Instr(this.cAssetMint, order)
+                    await this.bidctr.makeCancelOrderV2Instr(this.cAssetMint, order)
                 )
             });
         return ixs;
@@ -262,9 +262,9 @@ export class CypherMMClient {
         //Fix this inefficient bs -- keep track of orders with ws? -- TODO
         const toCancel = orders;
         toCancel.map(
-            (order) => {
-                ixs.push(this.mintctr.makeCancelOrderV2Instr(this.cAssetMint, order))
-                ixs.push(this.withdrawMarketCollateralInstr(this.cAssetMint, uiToSplAmount(order.price * order.size * 1.5, this.quoteDecimals)))
+            async (order) => {
+                ixs.push(await this.mintctr.makeCancelOrderV2Instr(this.cAssetMint, order))
+                ixs.push(await this.withdrawMarketCollateralInstr(this.cAssetMint, uiToSplAmount(order.price * order.size * 1.75, this.quoteDecimals)))
             }
         );
         return ixs;
