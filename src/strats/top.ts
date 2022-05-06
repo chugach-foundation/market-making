@@ -35,6 +35,7 @@ export class TopOfBookStrat implements MM_Strat {
         console.log("Initialized Strategy: Top Of Book");
     }
 
+    // maybe we should add quote tick change to hyperparms in order to better quote markets with diff prices
     private async quoteTop() {
         const size = this.hparams.max_size;
         let tbid, task;
@@ -45,10 +46,10 @@ export class TopOfBookStrat implements MM_Strat {
             [tbid, task] = [1, 1000000];
         }
 
-        let [qbid, qask] = [tbid + .001, task - .001];
+        let [qbid, qask] = [tbid + .0001, task - .0001];
         if (qbid >= qask) {
-            qbid -= .001;
-            qask += .001
+            qbid -= .0001;
+            qask += .0001
         }
 
         const singers = []
@@ -64,7 +65,7 @@ export class TopOfBookStrat implements MM_Strat {
         let bidsToCancel: Order[] = []
         let mintsToCancel: Order[] = []
 
-        if (oinfo.bidPrice == qbid || oinfo.bidPrice == qbid - .001) {
+        if (oinfo.bidPrice == qbid || oinfo.bidPrice == qbid - .0001) {
             //Don't frontrun self, but check if we need to reinforce the order
             //Add the fraction missing cuz queue priority
             qbid = oinfo.bidPrice;
@@ -108,6 +109,8 @@ export class TopOfBookStrat implements MM_Strat {
         singers.push(this.mclient.bidPayer);
         const builder = new FastTXNBuilder(this.mclient.mintPayer, this.mclient.connection, singers);
 
+        // add ix for withdrawing funds from minters margin account in order to increase capital efficiency of inting
+        // this might already be something ben has done with unpublished code
         if (bidsToCancel.length) builder.add(await this.mclient.makeCancelBidOrdersInstructions(bidsToCancel));
         if (mintsToCancel.length) builder.add(await this.mclient.makeCancelMintOrdersAndWithdrawMktCollateralInstructions(mintsToCancel));
         if (bidix) builder.add(bidix);
