@@ -119,7 +119,7 @@ export class TopOfBookStrat implements MM_Strat {
         if (builder.ixs.length <= 2) {
             return "SKIPPING TXN: NO UPDATES REQUIRED";
         }
-        console.log(builder.ixs.length)
+
         const { execute } = await builder.build();
         const txh = await execute();
         await this.mclient.connection.confirmTransaction(txh, "processed");
