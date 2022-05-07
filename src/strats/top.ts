@@ -45,15 +45,15 @@ export class TopOfBookStrat implements MM_Strat {
             [tbid, task] = [1, 1000000];
         }
 
-        let [qbid, qask] = [tbid + .001, task - .001];
+        let [qbid, qask] = [tbid + .0001, task - .0001];
         if (qbid >= qask) {
-            qbid -= .001;
-            qask += .001
+            qbid -= .0001;
+            qask += .0001
         }
 
         const singers = []
         let bidix: TransactionInstruction;
-        let depositMktix: TransactionInstruction;
+        //let depositMktix: TransactionInstruction;
         let mintix: TransactionInstruction;
         //const mintix = this.mclient.makeAskInstruction(qask, size);
 
@@ -64,7 +64,7 @@ export class TopOfBookStrat implements MM_Strat {
         let bidsToCancel: Order[] = []
         let mintsToCancel: Order[] = []
 
-        if (oinfo.bidPrice == qbid || oinfo.bidPrice == qbid - .001) {
+        if (oinfo.bidPrice == qbid || oinfo.bidPrice == qbid - .0001) {
             //Don't frontrun self, but check if we need to reinforce the order
             //Add the fraction missing cuz queue priority
             qbid = oinfo.bidPrice;
@@ -84,18 +84,18 @@ export class TopOfBookStrat implements MM_Strat {
             )
         }
         oinfo = await this.mclient.getOutOrdersInfo(this.mclient.mintctr);
-        if (oinfo.askPrice == qask || oinfo.askPrice == qask + .001) {
+        if (oinfo.askPrice == qask || oinfo.askPrice == qask + .0001) {
             //Don't frontrun self, but check if we need to reinforce the order
             //Add the fraction missing cuz queue priority
             qask = oinfo.askPrice;
             const dif = asksize - oinfo.askSize;
             if (dif > .1) {
-                depositMktix = await this.mclient.depositMintCollateralInstruction(qask, dif);
+                //depositMktix = await this.mclient.depositMintCollateralInstruction(qask, dif);
                 mintix = await this.mclient.makeMintInstruction(qask, dif);
             }
         }
         else {
-            depositMktix = await this.mclient.depositMintCollateralInstruction(qask, asksize);
+            //depositMktix = await this.mclient.depositMintCollateralInstruction(qask, asksize);
             mintix = await this.mclient.makeMintInstruction(qask, asksize);
             oinfo.orders.map(
                 (order) => {
@@ -107,11 +107,11 @@ export class TopOfBookStrat implements MM_Strat {
         singers.push(this.mclient.mintPayer);
         singers.push(this.mclient.bidPayer);
         const builder = new FastTXNBuilder(this.mclient.mintPayer, this.mclient.connection, singers);
-
+        
         if (bidsToCancel.length) builder.add(await this.mclient.makeCancelBidOrdersInstructions(bidsToCancel));
         if (mintsToCancel.length) builder.add(await this.mclient.makeCancelMintOrdersAndWithdrawMktCollateralInstructions(mintsToCancel));
         if (bidix) builder.add(bidix);
-        if (depositMktix) builder.add(depositMktix);
+        //if (depositMktix) builder.add(depositMktix);
         if (mintix) builder.add(mintix);
         const six = await this.mclient.makeSettleFundsInstruction();
         builder.add(six);

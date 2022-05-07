@@ -1,11 +1,13 @@
 import {
   Keypair,
   Transaction,
+  PublicKey,
   TransactionInstruction,
   Connection,
   Signer
 } from "@solana/web3.js"
-
+import {Token, u64} from "@solana/spl-token"
+import { ASSOCIATED_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@project-serum/anchor/dist/cjs/utils/token";
 export const loadPayer = (keypairPath: string): Keypair => {
   return Keypair.fromSecretKey(
     Buffer.from(
@@ -32,7 +34,7 @@ export class FastTXNBuilder {
     this.payer = payer;
     this.ixs = [];
     this.connection = connection;
-    this.singers = signers;
+    this.singers = signers ?? [];
   }
 
   add(ix: TransactionInstruction | TransactionInstruction[]) {
@@ -79,4 +81,19 @@ export class FastTXNBuilder {
   }
 
 }
+
+export async function getBalance(tokenMint : PublicKey, owner : PublicKey, con : Connection){
+  const ta = await Token.getAssociatedTokenAddress(
+    ASSOCIATED_PROGRAM_ID,
+    TOKEN_PROGRAM_ID,
+    tokenMint,
+    owner
+  );
+  const acc = await con.getAccountInfo(ta);
+  return tokenAmountAccessor(acc)
+}
+export function tokenAmountAccessor(tokenAccountInfo) {
+  return u64.fromBuffer(tokenAccountInfo.data.slice(64, 64 + 8));
+}
+
 

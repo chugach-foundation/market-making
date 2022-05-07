@@ -161,7 +161,7 @@ export class CypherMMClient {
         );
     }
 
-    async depositMarketCollateralInstr(cAssetMint: PublicKey, amount: BN) {
+    async depositMarketMintCollateralInstr(cAssetMint: PublicKey, amount: BN) {
         // console.log(
         //     'Deposit market collateral for CAsset: ',
         //     cAssetMint.toString()
@@ -182,9 +182,29 @@ export class CypherMMClient {
             .instruction();
     }
 
+    async depositMarketBidCollateralInstr(cAssetMint: PublicKey, amount: BN) : Promise<TransactionInstruction> {
+        // console.log(
+        //     'Deposit market collateral for CAsset: ',
+        //     cAssetMint.toString()
+        // );
+        // console.log('Amount: ', amount.toNumber());
+        this.bidctr.group.validateMarket(cAssetMint);
+        return await this.bidctr.client.methods
+        .depositCollateral(amount)
+        .accounts({
+        cypherGroup: this.bidctr.group.address,
+        cypherUser: this.bidctr.user.address,
+        cypherPcVault: this.bidctr.group.quoteVault,
+        depositFrom: await this.bidctr.client.getAssociatedUSDCAddress(),
+        userSigner: this.bidctr.client.walletPubkey,
+        tokenProgram: TOKEN_PROGRAM_ID
+    })
+        .instruction();
+    }
+
     async depositMintCollateralInstruction(price: number, size: number): Promise<TransactionInstruction> {
         // fix to pull cratio for given markert from onchain program
-        return await this.depositMarketCollateralInstr(this.cAssetMint, uiToSplAmount(price * size * 1.75, this.quoteDecimals))
+        return await this.depositMarketMintCollateralInstr(this.cAssetMint, uiToSplAmount(price * size * 1.75, this.quoteDecimals))
     }
 
     async makeMintInstruction(price: number, size: number): Promise<TransactionInstruction> {
@@ -224,13 +244,21 @@ export class CypherMMClient {
 
         let ixs = []
         //Fix this inefficient bs -- keep track of orders with ws? -- TODO
-        const toCancel = orders;
-        toCancel.map(
+        for(let i = 0; i < orders.length; i++){
+            let ix = await this.bidctr.makeCancelOrderV2Instr(this.cAssetMint, orders[i]);
+            ixs.push(ix);
+            console.log(ix)
+        }
+        /*toCancel.map(
             async (order) => {
+                let ix = await this.bidctr.makeCancelOrderV2Instr(this.cAssetMint, order);
+                console.log(ix);
                 ixs.push(
-                    await this.bidctr.makeCancelOrderV2Instr(this.cAssetMint, order)
+                    ix
                 )
             });
+            */
+        console.log(ixs);
         return ixs;
     }
 
@@ -260,13 +288,9 @@ export class CypherMMClient {
 
         let ixs = []
         //Fix this inefficient bs -- keep track of orders with ws? -- TODO
-        const toCancel = orders;
-        toCancel.map(
-            async (order) => {
-                ixs.push(await this.mintctr.makeCancelOrderV2Instr(this.cAssetMint, order))
-                ixs.push(await this.withdrawMarketCollateralInstr(this.cAssetMint, uiToSplAmount(order.price * order.size * 1.75, this.quoteDecimals)))
-            }
-        );
+        for(let i = 0; i < orders.length; i++){
+            ixs.push(await this.mintctr.makeCancelOrderV2Instr(this.cAssetMint, orders[i]));
+        }
         return ixs;
 
     }
