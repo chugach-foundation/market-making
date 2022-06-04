@@ -24,7 +24,7 @@ impl FastTxnBuilder{
     }
 
     pub fn build(&self, recent_blockhash : Hash, payer : &Keypair, additional_signers : Option<&Vec<Keypair>>) -> Transaction{
-        let message = Message::new(self.ixs.as_slice(), Some(&payer.pubkey()));
+        let message = Message::new(&self.ixs[..], Some(&payer.pubkey()));
         let mut txn = Transaction::new_unsigned(message);
         txn.partial_sign(&[payer], recent_blockhash);
         if let Some(adsigners) = additional_signers{

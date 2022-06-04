@@ -11,6 +11,7 @@ pub struct ChainMetaService{
     recent_blockhash : RwLock<Hash>
 }
 
+//Abstraction here is bad with the exposed Arcs -- maybe fix later
 impl ChainMetaService{
     pub async fn new_load(client : Arc<RpcClient>) -> Arc<ChainMetaService>{
         let start_hash = client.get_latest_blockhash().await.unwrap();

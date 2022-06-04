@@ -70,9 +70,6 @@ export class CypherMMClient {
     static async load(cAssetMint: PublicKey, cluster: Cluster, rpc: string, groupAddr: PublicKey, bidderKeyPath: string, minterKeyPath?: string): Promise<CypherMMClient> {
         const connection = new Connection(rpc, "processed")
 
-
-
-
         const bidk = loadPayer(bidderKeyPath);
         const bidclient = new CypherClient(cluster, new NodeWallet(bidk), { commitment: "processed", skipPreflight: true });
         const bidctr = await CypherUserController.loadOrCreate(bidclient, groupAddr);

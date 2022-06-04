@@ -16,3 +16,9 @@ bytemuck = { version = "1.4.0" }
 arrayref = "0.3.6"
 cypher = {path="../../cypher-protocol/programs/cypher"}
 cypher-tester = {path="../../cypher-protocol/tester"}
+cypher-math = { path = "../../cypher-protocol/libraries/math" }
+anchor-lang = { git = "https://github.com/chugach-foundation/anchor.git", rev="2100325" }
+anchor-client = { git = "https://github.com/chugach-foundation/anchor.git", rev="2100325" }
+spl-token = { version = "3.1.1", features = ["no-entrypoint"] }
+fraction = "0.10.0"  
+spl-math = "0.1.0"

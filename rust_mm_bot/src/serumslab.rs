@@ -321,6 +321,7 @@ impl Slab {
     slab
   }
 
+  //Each one of these does a preorder traversal
   pub fn get_depth(
       &self, 
       depth: u64, 
@@ -328,7 +329,6 @@ impl Slab {
       coin_lot_size: u64, 
       is_asks: bool,
       coin_token_decimal_factor: u64,
-      pc_token_decimal_factor: u64
     ) -> Vec<OrderBookLine> {
     let (header, _nodes) = self.parts();
     let depth_to_get: usize = std::cmp::min(depth, header.leaf_count) as usize;

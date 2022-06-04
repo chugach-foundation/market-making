@@ -11,6 +11,8 @@ pub struct AccountInfoService{
     keys : Vec<Pubkey>
 }
 
+//Abstraction here is bad with the exposed Arcs -- maybe fix later
+
 impl AccountInfoService{
     pub fn new(client : Arc<RpcClient>, keys : &[Pubkey]) -> AccountInfoService{
         let service = AccountInfoService {
@@ -21,7 +23,9 @@ impl AccountInfoService{
         service
     }
 
-    //Obtains a read lock to the info service and returns. While this read lock is held, account infos WILL NOT update. Drop this lock to resume updating of the accounts
+    ///Obtains a read lock to the info service and returns. 
+    /// While this read lock is held, account infos WILL NOT update. 
+    /// Drop this lock to resume updating of the accounts
     #[inline(always)]
     pub async fn get_account_map_read_lock<'a>(&'a self) -> RwLockReadGuard<'a, HashMap<Pubkey, Account>>{
         self.infos.read().await
