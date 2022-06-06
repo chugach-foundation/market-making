@@ -1,4 +1,3 @@
-pub mod inventorymanager;
-pub mod fracmaths;
-pub mod serummaths;
-mod SerumMaths;
+pub mod frac_maths;
+pub mod inventory_manager;
+pub mod serum_maths;

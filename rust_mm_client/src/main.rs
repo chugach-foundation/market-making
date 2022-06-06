@@ -1,28 +1,28 @@
-
-
+pub mod account_info_service;
+pub mod chain_meta_service;
+pub mod cypher_group;
+pub mod cypher_user;
+pub mod fast_tx_builder;
 pub mod math;
-pub mod accountinfoservice;
-pub mod serumslab;
-pub mod chainmetaservice;
-pub mod fasttxnbuilder;
-pub mod cypheruser;
-pub mod cyphergroup;
+pub mod serum_slab;
 
 use std::{str::FromStr, sync::Arc};
 
-pub use accountinfoservice::AccountInfoService;
+pub use account_info_service::AccountInfoService;
 use arrayref::array_refs;
-use solana_sdk::{pubkey::Pubkey, commitment_config::CommitmentConfig};
-use solana_client::{nonblocking::rpc_client::RpcClient};
+use solana_client::nonblocking::rpc_client::RpcClient;
+use solana_sdk::{commitment_config::CommitmentConfig, pubkey::Pubkey};
 
-use crate::serumslab::Slab;
+use crate::serum_slab::Slab;
 
-
-async fn test_deserialize_orderbook(){
+async fn test_deserialize_orderbook() {
     let serumbidkey = Pubkey::from_str("14ivtgssEBoBjuZJtSAPKYgpUK7DmnSwuPMqJoVTSgKJ").unwrap();
     let serumaskkey = Pubkey::from_str("CEQdAFKdycHugujQg9k2wbmxjcpdYZyVLfV9WerTnafJ").unwrap();
     let keys = vec![serumbidkey, serumaskkey];
-    let client = RpcClient::new_with_commitment("http://116.202.245.125:8899".to_string(), CommitmentConfig::processed());
+    let client = RpcClient::new_with_commitment(
+        "http://116.202.245.125:8899".to_string(),
+        CommitmentConfig::processed(),
+    );
     let service = Arc::new(AccountInfoService::new(Arc::new(client), &keys[..]));
     service.start_service().await;
     let map = service.get_account_map_read_lock().await;
