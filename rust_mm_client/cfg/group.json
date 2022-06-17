@@ -1,0 +1,109 @@
+{
+    "clusters" : {
+        "devnet": {
+            "rpcUrl": "https://devnet.genesysgo.net",
+            "pubsubUrl": "wss://devnet.genesysgo.net"
+        },
+        "mainnet": {
+            "rpcUrl": "https://ssc-dao.genesysgo.net",
+            "pubsubUrl": "wss://ssc-dao.genesysgo.net"
+        }
+    },
+    "groups": [
+        {
+            "cluster": "devnet",
+            "name": "devnet1",
+            "quoteSymbol": "USDC",
+            "address": "7m6yTQCLDnV6gqXVt44K2zHs9nczt82SmX4gy5rtfKEP",
+            "programId": "M9y2jRHDvuULE2o8d7wxfx6QBbMNGdyZ1CzAjmwgXpW",
+            "serumProgramId": "",
+            "tokens": [
+                {
+                    "symbol": "BTCETH",
+                    "mint": "4cs9XrJmawKuLnW1nuF7AEfiFGpfbGxmqbopyyUxn5Va",
+                    "decimals": 3,
+                    "tokenIndex": 0
+                },
+                {
+                    "symbol": "SOL&P",
+                    "mint": "DB1KeyoVEUmyybCMuuQ9TgzEQrYeuRG1UzQ2c9Rruw6b",
+                    "decimals": 1,
+                    "tokenIndex": 1
+                },
+                {
+                    "symbol": "SOLETH",
+                    "mint": "27EkpsHsrLaE3ZPg4FiFoba67XB5DMb1YvhXa2bHewtr",
+                    "decimals": 0,
+                    "tokenIndex": 3
+                },
+                {
+                    "symbol": "USDC",
+                    "mint": "DPhNUKVhnrkdbq37GUgTUBRbZLsvziX1p5e5YUXyjBsb",
+                    "decimals": 6,
+                    "tokenIndex": 15
+                }
+            ],
+            "oracles" : [
+                {
+                    "symbol": "SOL",
+                    "address": "3Mnn2fX6rQyUsyELYms1sBJyChWofzSNRoqYzvgMVz5E"
+                },
+                {
+                    "symbol": "ETH",
+                    "address": "2ciUuGZiee5macAMeQ7bHGTJtwcYTgnt6jdmQnnKZrfu"
+                },
+                {
+                    "symbol": "BTC",
+                    "address": "3m1y5h2uv7EQL3KaJZehvAJa4yDNvgc5yAdL9KPMKwvk"
+                }
+            ],
+            "markets": [
+                {
+                    "name": "BTC/ETH",
+                    "baseSymbol": "BTCETH",
+                    "quoteSymbol": "USDC",
+                    "marketType": "Pair",
+                    "pairBaseSymbol": "BTC",
+                    "pairQuoteSymbol": "ETH",
+                    "address": "Favt9SSgdAG5EHSg2MzqjaKkqe1sFeEiVfY2bA18uwWD",
+                    "baseDecimals": 3,
+                    "quoteDecimals": 6,
+                    "marketIndex": 0,
+                    "bids": "GesT5HkFTfX1Pm7QDRGr9vP4NArirokkcUYFJccdC3qQ",
+                    "asks": "GhkvpDTCuHj4DBY4CKSwuWbar1rJxbFoEzw42JZ29qRM",
+                    "eventQueue": "3or4bpmd9ho3nTysbgaYq6roHD8yjRypgZtWCYM66v9y"
+                },
+                {
+                    "name": "SOL&P",
+                    "baseSymbol": "SOL&P",
+                    "quoteSymbol": "USDC",
+                    "marketType": "Index",
+                    "pairBaseSymbol": "",
+                    "pairQuoteSymbol": "",
+                    "address": "BADjwTsX2k31krYd5Qt5Fgkw9SNMKCBmJ1pX6KRhjkYP",
+                    "baseDecimals": 1,
+                    "quoteDecimals": 6,
+                    "marketIndex": 1,
+                    "bids": "CMVnqTP2Zk6DAVxKrsBxhULr571NR9kGuFsUathxxtZm",
+                    "asks": "7nMWc9HZRunYruWhpc3yB9QcGCs92w9qadcLTbfCL52H",
+                    "eventQueue": "A4jYzbC7pwP9z84Li4yNTb7R3GyCBR39kNEKUJwWqx7S"
+                },
+                {
+                    "name": "SOL/ETH",
+                    "baseSymbol": "SOLETH",
+                    "quoteSymbol": "USDC",
+                    "marketType": "Pair",
+                    "pairBaseSymbol": "SOL",
+                    "pairQuoteSymbol": "ETH",
+                    "address": "DproNbtPLPC7Gk8MtN7GNY6bCXziJU44gbZXx9JZ9cy9",
+                    "baseDecimals": 0,
+                    "quoteDecimals": 6,
+                    "marketIndex": 3,
+                    "bids": "2jpmsEfADH8doZU8nTVexEVPbqdZuFTd7cXsa32LNUVS",
+                    "asks": "4ZR44TiNwYxXEiX57KVZ3FgCFGfekh7KeV5rLMFZ9p5v",
+                    "eventQueue": "GG22M3GMvTGAq5omRSEYdGvq6h7TURfp3QHUpLuKwzhF"
+                }
+            ]
+        }
+    ]
+}

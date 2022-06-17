@@ -1,0 +1,18 @@
+{
+    "wallet": "C:\\Users\\warde\\.config\\solana\\id.json",
+    "cluster": "devnet",
+    "inventoryManagerConfig": {
+        "initialCapital": 25000,
+        "maxExposure": 5000,
+        "maxQuote": 100000,
+        "shapeNum": 1,
+        "shapeDenom": 10000,
+        "spread": 250
+    },
+    "market": {
+        "name": "SOL/ETH",
+        "maxExposure": 25000,
+        "maxLongExposure": 0,
+        "maxShortExposure": 0
+    }
+}

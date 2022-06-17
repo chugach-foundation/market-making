@@ -1,0 +1,31 @@
+use std::fs::File;
+use std::io::BufReader;
+use std::error::Error;
+use serde_json;
+use serde::{Deserialize, Serialize};
+
+use crate::market_maker::InventoryManagerConfig;
+
+#[derive(Debug, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MarketMakerConfig {
+    pub wallet: String,
+    pub cluster: String,
+    pub inventory_manager_config: InventoryManagerConfig,
+    pub market: MarketConfig
+}
+
+#[derive(Debug, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MarketConfig {
+    pub name: String,
+    pub max_long_exposure: u64,
+    pub max_short_exposure: u64,
+}
+
+pub fn load_mm_config(path: &str) -> Result<MarketMakerConfig, Box<dyn Error>> {
+    let file = File::open(path)?;
+    let reader = BufReader::new(file);
+    let mm_config: MarketMakerConfig = serde_json::from_reader(reader).unwrap();
+    Ok(mm_config)
+}

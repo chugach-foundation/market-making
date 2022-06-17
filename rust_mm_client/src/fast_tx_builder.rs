@@ -3,18 +3,21 @@ use solana_sdk::{
     transaction::Transaction,
 };
 
+#[derive(Debug, Default)]
 pub struct FastTxnBuilder {
     pub ixs: Vec<Instruction>,
 }
 
 impl FastTxnBuilder {
     pub fn new() -> FastTxnBuilder {
-        return FastTxnBuilder { ixs: Vec::new() };
+        FastTxnBuilder::default()
     }
+
     #[inline(always)]
     pub fn add(&mut self, ix: Instruction) {
         self.ixs.push(ix);
     }
+    
     #[inline(always)]
     pub fn clear(&mut self) {
         self.ixs.clear();
