@@ -468,7 +468,7 @@ impl Worker {
                     side: Side::Ask,
                     max_coin_qty: NonZeroU64::new(quote_vols.ask_size as u64).unwrap(),
                     max_native_pc_qty_including_fees: NonZeroU64::new(max_native_pc_qty_ask).unwrap(),
-                    order_type: OrderType::Limit,
+                    order_type: OrderType::PostOnly,
                     self_trade_behavior: SelfTradeBehavior::CancelProvide,
                 }                
             )
@@ -495,7 +495,7 @@ impl Worker {
                     side: Side::Bid,
                     max_coin_qty: NonZeroU64::new(quote_vols.bid_size as u64).unwrap(),
                     max_native_pc_qty_including_fees: NonZeroU64::new(max_native_pc_qty_bid).unwrap(),
-                    order_type: OrderType::Limit,
+                    order_type: OrderType::PostOnly,
                     self_trade_behavior: SelfTradeBehavior::CancelProvide,
                 }                
             )
