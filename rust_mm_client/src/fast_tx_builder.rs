@@ -14,10 +14,15 @@ impl FastTxnBuilder {
     }
 
     #[inline(always)]
+    pub fn len(&self) -> usize {
+        self.ixs.len()
+    }
+
+    #[inline(always)]
     pub fn add(&mut self, ix: Instruction) {
         self.ixs.push(ix);
     }
-    
+
     #[inline(always)]
     pub fn clear(&mut self) {
         self.ixs.clear();

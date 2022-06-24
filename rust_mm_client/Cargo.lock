@@ -89,7 +89,7 @@ checksum = "6b2d54853319fd101b8dd81de382bcbf3e03410a64d8928bbee85a3e7dcde483"
 [[package]]
 name = "anchor-attribute-access-control"
 version = "0.24.2"
-source = "git+https://github.com/chugach-foundation/anchor.git?rev=8b75c1a#8b75c1a1e142f2173376f091547aa4dc033d2075"
+source = "git+https://github.com/chugach-foundation/anchor.git?rev=e14de2e#e14de2e0fc8d8238289b346b3d8b5deb7a1eb545"
 dependencies = [
  "anchor-syn",
  "anyhow",
@@ -102,7 +102,7 @@ dependencies = [
 [[package]]
 name = "anchor-attribute-account"
 version = "0.24.2"
-source = "git+https://github.com/chugach-foundation/anchor.git?rev=8b75c1a#8b75c1a1e142f2173376f091547aa4dc033d2075"
+source = "git+https://github.com/chugach-foundation/anchor.git?rev=e14de2e#e14de2e0fc8d8238289b346b3d8b5deb7a1eb545"
 dependencies = [
  "anchor-syn",
  "anyhow",
@@ -116,7 +116,7 @@ dependencies = [
 [[package]]
 name = "anchor-attribute-constant"
 version = "0.24.2"
-source = "git+https://github.com/chugach-foundation/anchor.git?rev=8b75c1a#8b75c1a1e142f2173376f091547aa4dc033d2075"
+source = "git+https://github.com/chugach-foundation/anchor.git?rev=e14de2e#e14de2e0fc8d8238289b346b3d8b5deb7a1eb545"
 dependencies = [
  "anchor-syn",
  "proc-macro2 1.0.39",
@@ -126,7 +126,7 @@ dependencies = [
 [[package]]
 name = "anchor-attribute-error"
 version = "0.24.2"
-source = "git+https://github.com/chugach-foundation/anchor.git?rev=8b75c1a#8b75c1a1e142f2173376f091547aa4dc033d2075"
+source = "git+https://github.com/chugach-foundation/anchor.git?rev=e14de2e#e14de2e0fc8d8238289b346b3d8b5deb7a1eb545"
 dependencies = [
  "anchor-syn",
  "proc-macro2 1.0.39",
@@ -137,7 +137,7 @@ dependencies = [
 [[package]]
 name = "anchor-attribute-event"
 version = "0.24.2"
-source = "git+https://github.com/chugach-foundation/anchor.git?rev=8b75c1a#8b75c1a1e142f2173376f091547aa4dc033d2075"
+source = "git+https://github.com/chugach-foundation/anchor.git?rev=e14de2e#e14de2e0fc8d8238289b346b3d8b5deb7a1eb545"
 dependencies = [
  "anchor-syn",
  "anyhow",
@@ -149,7 +149,7 @@ dependencies = [
 [[package]]
 name = "anchor-attribute-interface"
 version = "0.24.2"
-source = "git+https://github.com/chugach-foundation/anchor.git?rev=8b75c1a#8b75c1a1e142f2173376f091547aa4dc033d2075"
+source = "git+https://github.com/chugach-foundation/anchor.git?rev=e14de2e#e14de2e0fc8d8238289b346b3d8b5deb7a1eb545"
 dependencies = [
  "anchor-syn",
  "anyhow",
@@ -162,7 +162,7 @@ dependencies = [
 [[package]]
 name = "anchor-attribute-program"
 version = "0.24.2"
-source = "git+https://github.com/chugach-foundation/anchor.git?rev=8b75c1a#8b75c1a1e142f2173376f091547aa4dc033d2075"
+source = "git+https://github.com/chugach-foundation/anchor.git?rev=e14de2e#e14de2e0fc8d8238289b346b3d8b5deb7a1eb545"
 dependencies = [
  "anchor-syn",
  "anyhow",
@@ -174,7 +174,7 @@ dependencies = [
 [[package]]
 name = "anchor-attribute-state"
 version = "0.24.2"
-source = "git+https://github.com/chugach-foundation/anchor.git?rev=8b75c1a#8b75c1a1e142f2173376f091547aa4dc033d2075"
+source = "git+https://github.com/chugach-foundation/anchor.git?rev=e14de2e#e14de2e0fc8d8238289b346b3d8b5deb7a1eb545"
 dependencies = [
  "anchor-syn",
  "anyhow",
@@ -186,7 +186,7 @@ dependencies = [
 [[package]]
 name = "anchor-client"
 version = "0.24.2"
-source = "git+https://github.com/chugach-foundation/anchor.git?rev=8b75c1a#8b75c1a1e142f2173376f091547aa4dc033d2075"
+source = "git+https://github.com/chugach-foundation/anchor.git?rev=e14de2e#e14de2e0fc8d8238289b346b3d8b5deb7a1eb545"
 dependencies = [
  "anchor-lang",
  "anyhow",
@@ -202,7 +202,7 @@ dependencies = [
 [[package]]
 name = "anchor-derive-accounts"
 version = "0.24.2"
-source = "git+https://github.com/chugach-foundation/anchor.git?rev=8b75c1a#8b75c1a1e142f2173376f091547aa4dc033d2075"
+source = "git+https://github.com/chugach-foundation/anchor.git?rev=e14de2e#e14de2e0fc8d8238289b346b3d8b5deb7a1eb545"
 dependencies = [
  "anchor-syn",
  "anyhow",
@@ -214,7 +214,7 @@ dependencies = [
 [[package]]
 name = "anchor-lang"
 version = "0.24.2"
-source = "git+https://github.com/chugach-foundation/anchor.git?rev=8b75c1a#8b75c1a1e142f2173376f091547aa4dc033d2075"
+source = "git+https://github.com/chugach-foundation/anchor.git?rev=e14de2e#e14de2e0fc8d8238289b346b3d8b5deb7a1eb545"
 dependencies = [
  "anchor-attribute-access-control",
  "anchor-attribute-account",
@@ -237,7 +237,7 @@ dependencies = [
 [[package]]
 name = "anchor-spl"
 version = "0.24.2"
-source = "git+https://github.com/chugach-foundation/anchor.git?rev=8b75c1a#8b75c1a1e142f2173376f091547aa4dc033d2075"
+source = "git+https://github.com/chugach-foundation/anchor.git?rev=e14de2e#e14de2e0fc8d8238289b346b3d8b5deb7a1eb545"
 dependencies = [
  "anchor-lang",
  "serum_dex 0.5.6 (git+https://github.com/project-serum/serum-dex?rev=85b4f14)",
@@ -249,7 +249,7 @@ dependencies = [
 [[package]]
 name = "anchor-syn"
 version = "0.24.2"
-source = "git+https://github.com/chugach-foundation/anchor.git?rev=8b75c1a#8b75c1a1e142f2173376f091547aa4dc033d2075"
+source = "git+https://github.com/chugach-foundation/anchor.git?rev=e14de2e#e14de2e0fc8d8238289b346b3d8b5deb7a1eb545"
 dependencies = [
  "anyhow",
  "bs58 0.3.1",
@@ -952,31 +952,10 @@ dependencies = [
  "anchor-spl",
  "bitflags",
  "bytemuck",
- "cypher-math",
- "cypher-proc-macros",
+ "jet-proto-math",
+ "jet-proto-proc-macros",
  "pyth-client",
- "spl-token",
  "static_assertions",
-]
-
-[[package]]
-name = "cypher-math"
-version = "0.1.0"
-dependencies = [
- "bytemuck",
- "static_assertions",
- "thiserror",
- "uint 0.9.3",
-]
-
-[[package]]
-name = "cypher-proc-macros"
-version = "0.1.0"
-dependencies = [
- "proc-macro2 1.0.39",
- "quote 1.0.18",
- "static_assertions",
- "syn 1.0.96",
 ]
 
 [[package]]
@@ -989,12 +968,12 @@ dependencies = [
  "arrayref",
  "bytemuck",
  "cypher",
- "cypher-math",
+ "jet-proto-math",
  "libfuzzer-sys",
  "pyth-client",
  "rand 0.7.3",
  "safe-transmute",
- "serum_dex 0.5.6 (git+https://github.com/badass-commits/serum-dex.git?rev=d5d6709)",
+ "serum_dex 0.5.6 (git+https://github.com/chugach-foundation/serum-dex.git?rev=2fab8b9)",
  "solana-program-test",
  "solana-sdk",
  "spl-token",
@@ -1831,6 +1810,28 @@ name = "itoa"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "112c678d4050afce233f4f2852bb2eb519230b3cf12f33585275537d7e41578d"
+
+[[package]]
+name = "jet-proto-math"
+version = "1.0.6"
+source = "git+https://github.com/chugach-foundation/jet-program-libraries.git?rev=ac8909b#ac8909b15f1716e9de3bcb246656611b62c0378a"
+dependencies = [
+ "bytemuck",
+ "static_assertions",
+ "thiserror",
+ "uint",
+]
+
+[[package]]
+name = "jet-proto-proc-macros"
+version = "1.0.3"
+source = "git+https://github.com/chugach-foundation/jet-program-libraries.git?rev=ac8909b#ac8909b15f1716e9de3bcb246656611b62c0378a"
+dependencies = [
+ "proc-macro2 1.0.39",
+ "quote 1.0.18",
+ "static_assertions",
+ "syn 1.0.96",
+]
 
 [[package]]
 name = "jobserver"
@@ -2945,22 +2946,24 @@ dependencies = [
  "anchor-lang",
  "arrayref",
  "base64 0.13.0",
+ "bitflags",
  "bytemuck",
  "chrono",
  "clap 3.1.18",
  "cypher",
- "cypher-math",
  "cypher-tester",
  "dashmap 5.3.4",
  "fraction",
  "futures",
+ "jet-proto-math",
+ "jet-proto-proc-macros",
  "log",
  "num_enum",
  "pyth-sdk-solana",
  "safe-transmute",
  "serde",
  "serde_json",
- "serum_dex 0.5.4",
+ "serum_dex 0.5.6 (git+https://github.com/chugach-foundation/serum-dex.git?rev=2fab8b9)",
  "solana-account-decoder",
  "solana-client",
  "solana-sdk",
@@ -3279,10 +3282,10 @@ dependencies = [
 
 [[package]]
 name = "serum_dex"
-version = "0.5.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c62b5450e2d875e269af76b80080126e2d8eeb10ac256f900dc7cbad1a8dc85e"
+version = "0.5.6"
+source = "git+https://github.com/chugach-foundation/serum-dex.git?rev=2fab8b9#2fab8b91cb0963e81ede434599bf13c9a0517dd1"
 dependencies = [
+ "arbitrary",
  "arrayref",
  "bincode",
  "bytemuck",
@@ -3306,30 +3309,6 @@ name = "serum_dex"
 version = "0.5.6"
 source = "git+https://github.com/project-serum/serum-dex?rev=85b4f14#85b4f1499017f22da4b355781bdb5973b3b2646f"
 dependencies = [
- "arrayref",
- "bincode",
- "bytemuck",
- "byteorder",
- "enumflags2",
- "field-offset",
- "itertools 0.9.0",
- "num-traits",
- "num_enum",
- "safe-transmute",
- "serde",
- "solana-program",
- "spl-token",
- "static_assertions",
- "thiserror",
- "without-alloc",
-]
-
-[[package]]
-name = "serum_dex"
-version = "0.5.6"
-source = "git+https://github.com/badass-commits/serum-dex.git?rev=d5d6709#d5d6709fd8fd50d1665d27f92c1dccdf7ceca5ca"
-dependencies = [
- "arbitrary",
  "arrayref",
  "bincode",
  "bytemuck",
@@ -4347,7 +4326,7 @@ dependencies = [
  "num-traits",
  "solana-program",
  "thiserror",
- "uint 0.8.5",
+ "uint",
 ]
 
 [[package]]
@@ -4895,18 +4874,6 @@ dependencies = [
  "byteorder",
  "crunchy",
  "rustc-hex",
- "static_assertions",
-]
-
-[[package]]
-name = "uint"
-version = "0.9.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "12f03af7ccf01dd611cc450a0d10dbc9b745770d096473e2faf0ca6e2d66d1e0"
-dependencies = [
- "byteorder",
- "crunchy",
- "hex",
  "static_assertions",
 ]
 

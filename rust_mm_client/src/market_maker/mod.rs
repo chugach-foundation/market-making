@@ -1,9 +1,11 @@
-pub mod market_maker;
 pub mod inventory_manager;
-pub mod worker;
+pub mod market_maker;
+mod order_manager;
 mod utils;
+pub mod worker;
 
-pub use market_maker::*;
 pub use inventory_manager::*;
-pub use worker::*;
+pub use market_maker::*;
+use order_manager::*;
 pub use utils::*;
+pub use worker::*;

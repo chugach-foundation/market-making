@@ -1,15 +1,10 @@
 use {
-    dashmap::{
-        mapref::one::Ref,
-        DashMap
-    },
-    tokio::sync::broadcast::{
-        Sender, channel
-    },
-    solana_sdk::pubkey::Pubkey,
+    dashmap::mapref::one::RefMut,
+    dashmap::{mapref::one::Ref, DashMap},
     log::warn,
     solana_sdk::account::Account,
-    dashmap::mapref::one::RefMut
+    solana_sdk::pubkey::Pubkey,
+    tokio::sync::broadcast::{channel, Sender},
 };
 
 pub struct AccountsCache {
@@ -20,14 +15,14 @@ pub struct AccountsCache {
 #[derive(Debug)]
 pub struct AccountState {
     pub account: Account,
-    pub slot: u64
+    pub slot: u64,
 }
 
 impl AccountsCache {
     pub fn default() -> Self {
         Self {
             map: DashMap::default(),
-            sender: channel::<Pubkey>(u16::MAX as usize).0
+            sender: channel::<Pubkey>(u16::MAX as usize).0,
         }
     }
 
@@ -37,7 +32,7 @@ impl AccountsCache {
             sender,
         }
     }
-    
+
     pub fn get(&self, key: &Pubkey) -> Option<Ref<'_, Pubkey, AccountState>> {
         self.map.get(key)
     }
@@ -46,11 +41,7 @@ impl AccountsCache {
         self.map.get_mut(key)
     }
 
-    pub fn insert(
-        &self,
-        key: Pubkey,
-        data: AccountState,
-    ) -> Result<(), AccountsCacheError> {
+    pub fn insert(&self, key: Pubkey, data: AccountState) -> Result<(), AccountsCacheError> {
         //info!("[CACHE] Updating entry for account {}", key.to_string());
         self.map.insert(key, data);
 
@@ -58,14 +49,16 @@ impl AccountsCache {
             Ok(_) => {
                 //info!("Updated account with key: {}", key);
                 Ok(())
-            },
+            }
             Err(_) => {
-                warn!("Failed to send message about updated account {}", key.to_string());
+                warn!(
+                    "Failed to send message about updated account {}",
+                    key.to_string()
+                );
                 Err(AccountsCacheError::ChannelSendError)
-            },
+            }
         }
     }
-
 }
 
 pub enum AccountsCacheError {

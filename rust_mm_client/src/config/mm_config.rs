@@ -1,8 +1,8 @@
+use serde::{Deserialize, Serialize};
+use serde_json;
+use std::error::Error;
 use std::fs::File;
 use std::io::BufReader;
-use std::error::Error;
-use serde_json;
-use serde::{Deserialize, Serialize};
 
 use crate::market_maker::InventoryManagerConfig;
 
@@ -12,15 +12,13 @@ pub struct MarketMakerConfig {
     pub wallet: String,
     pub cluster: String,
     pub inventory_manager_config: InventoryManagerConfig,
-    pub market: MarketConfig
+    pub market: MarketConfig,
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MarketConfig {
     pub name: String,
-    pub max_long_exposure: u64,
-    pub max_short_exposure: u64,
 }
 
 pub fn load_mm_config(path: &str) -> Result<MarketMakerConfig, Box<dyn Error>> {

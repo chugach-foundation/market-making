@@ -1,24 +1,27 @@
 use std::sync::Arc;
 
-use anchor_lang::{ZeroCopy, Owner};
+use anchor_lang::{Owner, ZeroCopy};
 use arrayref::array_ref;
 use bytemuck::checked::from_bytes;
 use cypher::{
+    constants::{B_CYPHER_USER, B_OPEN_ORDERS},
     quote_mint,
-    constants::{B_OPEN_ORDERS, B_CYPHER_USER}
 };
-use cypher_tester::{associated_token, get_request_builder, dex};
+use cypher_tester::{associated_token, dex, get_request_builder};
 use serum_dex::instruction::MarketInstruction;
-use solana_client::{nonblocking::rpc_client::RpcClient, client_error::ClientError};
+use solana_client::{client_error::ClientError, nonblocking::rpc_client::RpcClient};
 use solana_sdk::{
+    account::Account,
+    instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
-    instruction::{Instruction, AccountMeta},
     rent::Rent,
+    signature::Keypair,
+    signer::Signer,
     system_program,
-    sysvar::SysvarId, account::Account, signature::Keypair, signer::Signer,
+    sysvar::SysvarId,
 };
 
-use crate::{market_maker::derive_dex_market_authority, fast_tx_builder::FastTxnBuilder};
+use crate::{fast_tx_builder::FastTxnBuilder, market_maker::derive_dex_market_authority};
 
 pub fn get_zero_copy_account<T: ZeroCopy + Owner>(solana_account: &Account) -> Box<T> {
     let data = &solana_account.data.as_slice();
@@ -29,11 +32,7 @@ pub fn get_zero_copy_account<T: ZeroCopy + Owner>(solana_account: &Account) -> B
 
 pub fn derive_cypher_user_address(group_address: &Pubkey, owner: &Pubkey) -> (Pubkey, u8) {
     let (address, bump) = Pubkey::find_program_address(
-        &[
-            B_CYPHER_USER,
-            group_address.as_ref(),
-            &owner.to_bytes(),
-        ],
+        &[B_CYPHER_USER, group_address.as_ref(), &owner.to_bytes()],
         &cypher::ID,
     );
 
@@ -97,7 +96,7 @@ pub fn get_deposit_collateral_ix(
     cypher_pc_vault: &Pubkey,
     source_token_account: &Pubkey,
     signer: &Pubkey,
-    amount: u64
+    amount: u64,
 ) -> Vec<Instruction> {
     let ixs = get_request_builder()
         .accounts(cypher::accounts::DepositCollateral {
@@ -138,6 +137,6 @@ pub fn get_init_open_orders_ix(
     vec![Instruction {
         accounts,
         data,
-        program_id: cypher::ID
+        program_id: cypher::ID,
     }]
 }

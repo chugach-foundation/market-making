@@ -1,43 +1,39 @@
-pub mod fast_tx_builder;
-pub mod math;
-pub mod serum_slab;
-mod config;
-mod logging;
-mod services;
-mod providers;
 mod accounts_cache;
+mod config;
+mod fast_tx_builder;
+mod logging;
 mod market_maker;
+mod math;
+mod providers;
+mod serum_slab;
+mod services;
 mod utils;
 
+use clap::Parser;
 use config::*;
 use cypher::{
-    states::{CypherUser, CypherGroup},
-    constants::QUOTE_TOKEN_IDX
+    constants::QUOTE_TOKEN_IDX,
+    states::{CypherGroup, CypherUser},
 };
-use cypher_math::Number;
 use cypher_tester::parse_dex_account;
 use fast_tx_builder::FastTxnBuilder;
-use serum_dex::state::OpenOrders;
-use solana_client::nonblocking::rpc_client::RpcClient;
-use tokio::sync::broadcast::channel;
-use utils::{
-    derive_quote_token_address, get_init_open_orders_ix, get_zero_copy_account, init_cypher_user
-};
-use std::{
-    str::FromStr, sync::Arc, fs::File, io::Read
-};
-use solana_sdk::{
-    pubkey::Pubkey, signature::Keypair, signer::Signer, commitment_config::CommitmentConfig
-};
-use clap::Parser;
+use jet_proto_math::Number;
 use log::{info, warn};
 use logging::init_logger;
+use serum_dex::state::OpenOrders;
+use solana_client::nonblocking::rpc_client::RpcClient;
+use solana_sdk::{
+    commitment_config::CommitmentConfig, pubkey::Pubkey, signature::Keypair, signer::Signer,
+};
+use std::{fs::File, io::Read, str::FromStr, sync::Arc};
+use tokio::sync::broadcast::channel;
+use utils::{
+    derive_quote_token_address, get_init_open_orders_ix, get_zero_copy_account, init_cypher_user,
+};
 
 use crate::{
     market_maker::MarketMaker,
-    utils::{
-        get_deposit_collateral_ix, derive_open_orders_address, derive_cypher_user_address
-    }
+    utils::{derive_cypher_user_address, derive_open_orders_address, get_deposit_collateral_ix},
 };
 
 // rework this, maybe ask user for input as well
@@ -45,11 +41,7 @@ pub const CYPHER_CONFIG_PATH: &str = "./cfg/group.json";
 
 #[derive(Parser)]
 struct Cli {
-    #[clap(
-        short = 'c',
-        long = "config",
-        parse(from_os_str)
-    )]
+    #[clap(short = 'c', long = "config", parse(from_os_str))]
     config: std::path::PathBuf,
 }
 
@@ -63,6 +55,8 @@ pub enum MarketMakerError {
     ErrorCreatingCypherAccount,
     ErrorCreatingOpenOrders,
     ErrorDepositing,
+    ErrorSubmittingOrders,
+    ChannelSendError,
     JoiningTaskError,
     InitServicesError,
     RpcClientInitError,
@@ -75,20 +69,23 @@ pub enum MarketMakerError {
 
 fn load_keypair(path: &str) -> Result<Keypair, MarketMakerError> {
     let fd = File::open(path);
-    
+
     let mut file = match fd {
         Ok(f) => f,
         Err(e) => {
             warn!("Failed to load keypair file: {}", e.to_string());
             return Err(MarketMakerError::KeypairFileOpenError);
-        },
+        }
     };
 
     let file_string = &mut String::new();
     let file_read_res = file.read_to_string(file_string);
 
     let _ = if let Err(e) = file_read_res {
-        warn!("Failed to read keypair bytes from keypair file: {}", e.to_string());
+        warn!(
+            "Failed to read keypair bytes from keypair file: {}",
+            e.to_string()
+        );
         return Err(MarketMakerError::KeypairFileReadError);
     };
 
@@ -101,7 +98,7 @@ fn load_keypair(path: &str) -> Result<Keypair, MarketMakerError> {
         .collect();
 
     let keypair = Keypair::from_bytes(keypair_bytes.as_ref());
-    
+
     match keypair {
         Ok(kp) => Ok(kp),
         Err(e) => {
@@ -130,25 +127,27 @@ async fn main() -> Result<(), MarketMakerError> {
     let keypair = load_keypair(mm_config.wallet.as_str()).unwrap();
     let pubkey = keypair.pubkey();
     info!("Loaded keypair with pubkey: {}", pubkey.to_string());
-    
-    let cypher_group_config = Arc::new(cypher_config
-        .get_group(mm_config.cluster.as_str())
-        .unwrap());
+
+    let cypher_group_config =
+        Arc::new(cypher_config.get_group(mm_config.cluster.as_str()).unwrap());
 
     let cypher_group_key = Pubkey::from_str(cypher_group_config.address.as_str()).unwrap();
 
     // initialize rpc client with cluster and cluster url provided in config
-    info!("Initializing rpc client for cluster-{} with url: {}", mm_config.cluster, cluster_config.rpc_url);
+    info!(
+        "Initializing rpc client for cluster-{} with url: {}",
+        mm_config.cluster, cluster_config.rpc_url
+    );
     let rpc_client = Arc::new(RpcClient::new_with_commitment(
         cluster_config.rpc_url.to_string(),
-        CommitmentConfig::processed(),
+        CommitmentConfig::confirmed(),
     ));
 
-    info!("Attempting to get the cypher group account with key: {}", cypher_group_key);
-    let cypher_group_res = _get_cypher_group(
-        Arc::clone(&rpc_client),
+    info!(
+        "Attempting to get the cypher group account with key: {}",
         cypher_group_key
-    ).await;
+    );
+    let cypher_group_res = _get_cypher_group(Arc::clone(&rpc_client), cypher_group_key).await;
     let cypher_group = match cypher_group_res {
         Ok(cg) => cg,
         Err(_) => {
@@ -156,18 +155,22 @@ async fn main() -> Result<(), MarketMakerError> {
             return Err(MarketMakerError::ErrorFetchingCypherGroup);
         }
     };
-    
+
     let (cypher_user_key, _bump) = derive_cypher_user_address(&cypher_group_key, &keypair.pubkey());
 
-    info!("Attempting to get the cypher user account with key: {}", cypher_user_key);
+    info!(
+        "Attempting to get the cypher user account with key: {}",
+        cypher_user_key
+    );
     let cypher_account_res = _get_or_init_cypher_user(
         &keypair,
         &cypher_group_key,
         &cypher_group,
         &cypher_user_key,
         Arc::clone(&rpc_client),
-        &mm_config
-    ).await;
+        &mm_config,
+    )
+    .await;
     let cypher_account = match cypher_account_res {
         Ok(cg) => cg,
         Err(_) => {
@@ -176,23 +179,26 @@ async fn main() -> Result<(), MarketMakerError> {
         }
     };
 
-    let market_config = cypher_group_config.get_market(
-        mm_config.cluster.as_str(),
-        mm_config.market.name.as_str()
-    ).unwrap();
+    let market_config = cypher_group_config
+        .get_market(mm_config.cluster.as_str(), mm_config.market.name.as_str())
+        .unwrap();
 
     let market_pubkey = Pubkey::from_str(market_config.address.as_str()).unwrap();
     let open_orders = derive_open_orders_address(&market_pubkey, &cypher_user_key).0;
 
-    info!("Attempting to get the open orders account for market: {}", market_config.address);
+    info!(
+        "Attempting to get the open orders account for market: {}",
+        market_config.address
+    );
     let open_orders_res = _get_or_init_open_orders(
         &keypair,
         &cypher_group_key,
         &cypher_user_key,
         &market_pubkey,
         &open_orders,
-        Arc::clone(&rpc_client)
-    ).await;
+        Arc::clone(&rpc_client),
+    )
+    .await;
     let _open_orders = match open_orders_res {
         Ok(cg) => cg,
         Err(_) => {
@@ -203,7 +209,7 @@ async fn main() -> Result<(), MarketMakerError> {
 
     info!("Initializing market maker.");
 
-    let (shutdown_send, mut shutdown_recv) = channel::<bool>(1);
+    let (shutdown_send, mut _shutdown_recv) = channel::<bool>(1);
 
     let mm = MarketMaker::new(
         Arc::clone(&rpc_client),
@@ -217,19 +223,17 @@ async fn main() -> Result<(), MarketMakerError> {
         shutdown_send.clone(),
     );
 
-    let mm_t = tokio::spawn(
-        async move {
-            let start_res = mm.start().await;
-            match start_res {
-                Ok(_) => (),
-                Err(e) => {
-                    return Err(e); 
-                },
-            };
+    let mm_t = tokio::spawn(async move {
+        let start_res = mm.start().await;
+        match start_res {
+            Ok(_) => (),
+            Err(e) => {
+                return Err(e);
+            }
+        };
 
-            Ok(())
-        }
-    );
+        Ok(())
+    });
 
     tokio::select! {
         _ = tokio::signal::ctrl_c() => {
@@ -239,25 +243,27 @@ async fn main() -> Result<(), MarketMakerError> {
                 },
                 Err(e) => {
                     warn!("Failed to send shutdown error: {}", e.to_string());
-                    return Err(MarketMakerError::ShutdownError);                    
+                    return Err(MarketMakerError::ShutdownError);
                 }
             };
         },
     };
 
-    let (mm_res, ) = tokio::join!(mm_t);
-    
+    let (mm_res,) = tokio::join!(mm_t);
+
     match mm_res {
         Ok(_) => (),
         Err(e) => {
-            warn!("There was an error while shutting down the account info service: {}", e.to_string());
+            warn!(
+                "There was an error while shutting down the account info service: {}",
+                e.to_string()
+            );
             return Err(MarketMakerError::ShutdownError);
-        },
+        }
     };
 
     Ok(())
 }
-
 
 async fn _get_cypher_group(
     rpc_client: Arc<RpcClient>,
@@ -285,14 +291,14 @@ async fn _get_or_init_open_orders(
     open_orders: &Pubkey,
     rpc_client: Arc<RpcClient>,
 ) -> Result<OpenOrders, MarketMakerError> {
-    let account_state = _fetch_open_orders(
-        open_orders,
-        Arc::clone(&rpc_client)
-    ).await;
+    let account_state = _fetch_open_orders(open_orders, Arc::clone(&rpc_client)).await;
 
     if account_state.is_ok() {
         let acc = account_state.unwrap();
-        info!("Open orders account for market {} with key {} already exists.", cypher_market, open_orders);
+        info!(
+            "Open orders account for market {} with key {} already exists.",
+            cypher_market, open_orders
+        );
         Ok(acc)
     } else {
         info!("Open orders account does not exist, creating..");
@@ -303,9 +309,10 @@ async fn _get_or_init_open_orders(
             cypher_market,
             open_orders,
             owner,
-            Arc::clone(&rpc_client)
-        ).await;
-        
+            Arc::clone(&rpc_client),
+        )
+        .await;
+
         match res {
             Ok(()) => (),
             Err(e) => {
@@ -313,10 +320,9 @@ async fn _get_or_init_open_orders(
                 return Err(e);
             }
         };
-        let open_orders = _fetch_open_orders(
-            open_orders,
-            Arc::clone(&rpc_client)
-        ).await.unwrap();
+        let open_orders = _fetch_open_orders(open_orders, Arc::clone(&rpc_client))
+            .await
+            .unwrap();
         Ok(open_orders)
     }
 }
@@ -330,23 +336,25 @@ async fn _get_or_init_cypher_user(
     rpc_client: Arc<RpcClient>,
     config: &MarketMakerConfig,
 ) -> Result<Box<CypherUser>, MarketMakerError> {
-    let account_state = _fetch_cypher_user(
-        cypher_user_pubkey, 
-        Arc::clone(&rpc_client)
-    ).await;
+    let account_state = _fetch_cypher_user(cypher_user_pubkey, Arc::clone(&rpc_client)).await;
 
     if account_state.is_ok() {
         info!("Cypher user account already exists, checking balance meets the config criteria.");
         let account = account_state.unwrap();
-        _check_cypher_balance(owner, cypher_user_pubkey, &account, cypher_group, config, rpc_client).await.unwrap();
+        _check_cypher_balance(
+            owner,
+            cypher_user_pubkey,
+            &account,
+            cypher_group,
+            config,
+            rpc_client,
+        )
+        .await
+        .unwrap();
         Ok(account)
     } else {
         info!("Cypher user account does not existing, creating account.");
-        let res = _init_cypher_user(
-            cypher_group_pubkey,
-            owner,
-            Arc::clone(&rpc_client)
-        ).await;
+        let res = _init_cypher_user(cypher_group_pubkey, owner, Arc::clone(&rpc_client)).await;
 
         match res {
             Ok(()) => (),
@@ -356,12 +364,20 @@ async fn _get_or_init_cypher_user(
             }
         };
 
-        let cypher_user = _fetch_cypher_user(
-            cypher_user_pubkey, 
-            Arc::clone(&rpc_client)
-        ).await.unwrap();
-        
-        _check_cypher_balance(owner, cypher_user_pubkey, &cypher_user, cypher_group, config, rpc_client).await.unwrap();
+        let cypher_user = _fetch_cypher_user(cypher_user_pubkey, Arc::clone(&rpc_client))
+            .await
+            .unwrap();
+
+        _check_cypher_balance(
+            owner,
+            cypher_user_pubkey,
+            &cypher_user,
+            cypher_group,
+            config,
+            rpc_client,
+        )
+        .await
+        .unwrap();
 
         Ok(cypher_user)
     }
@@ -379,22 +395,31 @@ async fn _check_cypher_balance(
     let position = cypher_user.get_position(QUOTE_TOKEN_IDX).unwrap();
     let quote_token = cypher_group.get_cypher_token(QUOTE_TOKEN_IDX);
 
-    let initial_capital = config.inventory_manager_config.initial_capital;
-    let initial_capital_native: Number = (initial_capital * 10_u64.checked_pow(quote_token.decimals().into()).unwrap()).into();
-    
-    info!("Desired initial capitial (native): {}.", initial_capital_native);
+    let initial_capital_native: Number = (config.inventory_manager_config.initial_capital
+        * 10_u64.checked_pow(quote_token.decimals().into()).unwrap())
+    .into();
+    info!(
+        "Desired initial capitial (native): {}.",
+        initial_capital_native
+    );
 
     let total_quote_deposits = position.total_deposits(quote_token);
+    info!(
+        "User total quote deposits (native): {}.",
+        total_quote_deposits
+    );
 
-    info!("User total quote deposits (native): {}.", total_quote_deposits);
-
-    if  total_quote_deposits >= initial_capital_native {
+    if total_quote_deposits >= initial_capital_native {
         return Ok(());
     };
-    
+
     let amount_rem = initial_capital_native - total_quote_deposits;
-    
-    info!("Depositing quote token (native): {} - {}", amount_rem, amount_rem.as_u64(0));
+
+    info!(
+        "Depositing quote token (native): {} - {}",
+        amount_rem,
+        amount_rem.as_u64(0)
+    );
 
     let source_ata = derive_quote_token_address(owner.pubkey());
 
@@ -412,15 +437,23 @@ async fn _check_cypher_balance(
     }
     let hash = rpc_client.get_latest_blockhash().await.unwrap();
     let tx = builder.build(hash, owner, None);
-    let res = rpc_client.send_and_confirm_transaction_with_spinner(&tx).await;
+    let res = rpc_client
+        .send_and_confirm_transaction_with_spinner(&tx)
+        .await;
 
     match res {
         Ok(s) => {
-            info!("Successfully deposited funds into cypher account. Transaction signature: {}", s.to_string());
+            info!(
+                "Successfully deposited funds into cypher account. Transaction signature: {}",
+                s.to_string()
+            );
             Ok(())
-        },
+        }
         Err(e) => {
-            warn!("There was an error depositing funds into cypher account: {}", e.to_string());
+            warn!(
+                "There was an error depositing funds into cypher account: {}",
+                e.to_string()
+            );
             Err(MarketMakerError::ErrorDepositing)
         }
     }
@@ -430,10 +463,11 @@ async fn _fetch_cypher_user(
     cypher_user_pubkey: &Pubkey,
     rpc_client: Arc<RpcClient>,
 ) -> Result<Box<CypherUser>, MarketMakerError> {
-    let res = rpc_client.get_account_with_commitment(
-        cypher_user_pubkey,
-        CommitmentConfig::confirmed()
-    ).await.unwrap().value;
+    let res = rpc_client
+        .get_account_with_commitment(cypher_user_pubkey, CommitmentConfig::confirmed())
+        .await
+        .unwrap()
+        .value;
 
     if res.is_some() {
         let account_state = get_zero_copy_account::<CypherUser>(&res.unwrap());
@@ -448,10 +482,11 @@ async fn _fetch_open_orders(
     open_orders: &Pubkey,
     rpc_client: Arc<RpcClient>,
 ) -> Result<OpenOrders, MarketMakerError> {
-    let res = rpc_client.get_account_with_commitment(
-        open_orders,
-        CommitmentConfig::confirmed()
-    ).await.unwrap().value;
+    let res = rpc_client
+        .get_account_with_commitment(open_orders, CommitmentConfig::confirmed())
+        .await
+        .unwrap()
+        .value;
 
     if res.is_some() {
         let ooa: OpenOrders = parse_dex_account(res.unwrap().data);
@@ -467,16 +502,15 @@ async fn _init_cypher_user(
     owner: &Keypair,
     rpc_client: Arc<RpcClient>,
 ) -> Result<(), MarketMakerError> {
-    let res = init_cypher_user(
-        cypher_group_pubkey,
-        owner,
-        &rpc_client,
-    ).await;
+    let res = init_cypher_user(cypher_group_pubkey, owner, &rpc_client).await;
 
     match res {
         Ok(_) => (),
         Err(e) => {
-            warn!("There was an error creating the cypher account: {}", e.to_string());
+            warn!(
+                "There was an error creating the cypher account: {}",
+                e.to_string()
+            );
             return Err(MarketMakerError::ErrorCreatingCypherAccount);
         }
     }
@@ -497,7 +531,7 @@ async fn _init_open_orders(
         cypher_user_pubkey,
         cypher_market,
         open_orders,
-        &signer.pubkey()
+        &signer.pubkey(),
     );
 
     let mut builder = FastTxnBuilder::new();
@@ -506,15 +540,23 @@ async fn _init_open_orders(
     }
     let hash = rpc_client.get_latest_blockhash().await.unwrap();
     let tx = builder.build(hash, signer, None);
-    let res = rpc_client.send_and_confirm_transaction_with_spinner(&tx).await;
+    let res = rpc_client
+        .send_and_confirm_transaction_with_spinner(&tx)
+        .await;
 
     match res {
         Ok(s) => {
-            info!("Successfully created open orders account. Transaction signature: {}", s.to_string());
+            info!(
+                "Successfully created open orders account. Transaction signature: {}",
+                s.to_string()
+            );
             Ok(())
-        },
+        }
         Err(e) => {
-            warn!("There was an error creating the open orders account: {}", e.to_string());
+            warn!(
+                "There was an error creating the open orders account: {}",
+                e.to_string()
+            );
             Err(MarketMakerError::ErrorCreatingOpenOrders)
         }
     }

@@ -1,112 +1,54 @@
-use std::convert::identity;
-
 use anchor_lang::ToAccountMetas;
 use bytemuck::bytes_of;
-use cypher::{states::{CypherToken, CypherMarket, CypherGroup, MintingRounds, minting_rounds}, constants::B_DEX_MARKET_AUTHORITY};
+use cypher::{
+    constants::B_DEX_MARKET_AUTHORITY,
+    states::{CypherGroup, CypherMarket, CypherToken},
+};
 use cypher_tester::{dex, ToPubkey};
-use log::info;
-use serum_dex::{state::{OpenOrders, MarketStateV2}, matching::{Side, OrderType}, instruction::{MarketInstruction, NewOrderInstructionV3, CancelOrderInstructionV2}};
-use solana_sdk::{instruction::{Instruction, AccountMeta}, signature::Keypair, pubkey::Pubkey, program_error::ProgramError, signer::Signer, rent::Rent, sysvar::SysvarId};
+use serum_dex::{
+    instruction::{CancelOrderInstructionV2, MarketInstruction, NewOrderInstructionV3},
+    matching::OrderType,
+    state::MarketStateV2,
+};
+use solana_sdk::{
+    instruction::{AccountMeta, Instruction},
+    program_error::ProgramError,
+    pubkey::Pubkey,
+    rent::Rent,
+    signature::Keypair,
+    signer::Signer,
+    sysvar::SysvarId,
+};
+use std::convert::identity;
 
-use crate::{providers::OrderBook, serum_slab::OrderBookOrder};
-
-pub struct OpenOrder {
-    pub order_id: u128,
-    pub client_order_id: u64,
-    pub price: u64,
-    pub quantity: u64,
-    pub side: Side,
+bitflags::bitflags! {
+    pub struct ClientOrderFlags: u32 {
+        const MINTING = 1 << 0;
+        const POST_ONLY = 1 << 1;
+        const POST_ALLOWED = 1 << 2;
+    }
 }
 
-
-pub fn get_open_orders(
-    open_orders: &OpenOrders,
-) -> Vec<OpenOrder> {
-    let mut oo: Vec<OpenOrder> = Vec::new();
-    let orders = open_orders.orders;
-
-    for i in 0..orders.len() {
-        let order_id = open_orders.orders[i];
-
-        if order_id != u128::default() {
-            let price = (order_id >> 64) as u64;
-            let side = open_orders.slot_side(i as u8).unwrap();
-            oo.push(OpenOrder {
-                order_id,
-                client_order_id: open_orders.client_order_ids[i],
-                side,
-                price,
-                quantity: u64::MIN
-            });
-        }
+pub fn gen_client_order_id(
+    orig_client_order_id: u32,
+    is_minting_order: bool,
+    order_type: OrderType,
+) -> u64 {
+    let mut client_order_flags = ClientOrderFlags::empty();
+    if is_minting_order {
+        client_order_flags |= ClientOrderFlags::MINTING;
     }
-
-    oo
-}
-
-pub async fn get_open_orders_with_qty(
-    open_orders: &OpenOrders,
-    orderbook: &OrderBook,
-) -> Vec<OpenOrder> {
-    let mut oo: Vec<OpenOrder> = Vec::new();
-    let orders = open_orders.orders;
-
-    for i in 0..orders.len() {
-        let order_id = open_orders.orders[i];
-        let client_order_id = open_orders.client_order_ids[i];
-
-        if order_id != u128::default() {
-            let price = (order_id >> 64) as u64;
-            let side = open_orders.slot_side(i as u8).unwrap();
-            let ob_order = get_order_book_line(orderbook, client_order_id, side).await;
-
-            if ob_order.is_some() {
-                oo.push(OpenOrder {
-                    order_id,
-                    client_order_id,
-                    side,
-                    price,
-                    quantity: ob_order.unwrap().quantity
-                });
-            }
+    match order_type {
+        OrderType::Limit => client_order_flags |= ClientOrderFlags::POST_ALLOWED,
+        OrderType::PostOnly => {
+            client_order_flags |= ClientOrderFlags::POST_ALLOWED;
+            client_order_flags |= ClientOrderFlags::POST_ONLY;
         }
+        OrderType::ImmediateOrCancel => {}
     }
-
-    oo
-}
-
-async fn get_order_book_line(
-    orderbook: &OrderBook,
-    client_order_id: u64,
-    side: Side,
-) -> Option<OrderBookOrder> {
-    if side == Side::Ask {
-        for order in orderbook.asks.read().await.iter() {
-            if order.client_order_id == client_order_id {
-                return Some(OrderBookOrder{
-                    order_id: order.order_id,
-                    price: order.price,
-                    quantity: order.quantity,
-                    client_order_id: order.client_order_id,
-                });
-            }
-        }
-    }
-
-    if side == Side::Bid {
-        for order in orderbook.bids.read().await.iter() {
-            if order.client_order_id == client_order_id {
-                return Some(OrderBookOrder{
-                    order_id: order.order_id,
-                    price: order.price,
-                    quantity: order.quantity,
-                    client_order_id: order.client_order_id,
-                });
-            }
-        }
-    }
-
-    None    
+    let upper = (orig_client_order_id as u64) << 32;
+    let lower = client_order_flags.bits() as u64;
+    upper | lower
 }
 
 pub fn gen_dex_vault_signer_key(
@@ -133,7 +75,7 @@ pub fn get_cancel_order_ix(
     open_orders_pubkey: &Pubkey,
     cypher_user_pubkey: &Pubkey,
     signer: &Keypair,
-    ix_data: CancelOrderInstructionV2
+    ix_data: CancelOrderInstructionV2,
 ) -> Instruction {
     let accounts = get_cancel_orders_accounts(
         cypher_group,
@@ -152,7 +94,7 @@ pub fn get_cancel_order_ix(
 }
 
 fn get_cancel_orders_accounts(
-    cypher_group: &CypherGroup,    
+    cypher_group: &CypherGroup,
     cypher_market: &CypherMarket,
     cypher_token: &CypherToken,
     dex_market_state: &MarketStateV2,
@@ -180,10 +122,7 @@ fn get_cancel_orders_accounts(
         AccountMeta::new(identity(dex_market_state.asks).to_pubkey(), false),
         AccountMeta::new(*open_orders_pubkey, false),
         AccountMeta::new(identity(dex_market_state.event_q).to_pubkey(), false),
-        AccountMeta::new(
-            identity(dex_market_state.coin_vault).to_pubkey(),
-            false,
-        ),
+        AccountMeta::new(identity(dex_market_state.coin_vault).to_pubkey(), false),
         AccountMeta::new(identity(dex_market_state.pc_vault).to_pubkey(), false),
         AccountMeta::new_readonly(dex_vault_signer, false),
         AccountMeta::new_readonly(spl_token::id(), false),
@@ -200,7 +139,7 @@ pub fn get_new_order_ix(
     open_orders_pubkey: &Pubkey,
     cypher_user_pubkey: &Pubkey,
     signer: &Keypair,
-    ix_data: NewOrderInstructionV3
+    ix_data: NewOrderInstructionV3,
 ) -> Instruction {
     let accounts = get_new_order_v3_accounts(
         cypher_group,
@@ -209,7 +148,7 @@ pub fn get_new_order_ix(
         dex_market_state,
         cypher_user_pubkey,
         open_orders_pubkey,
-        signer
+        signer,
     );
     let accounts = accounts.to_account_metas(None);
     Instruction {
@@ -269,7 +208,7 @@ pub fn get_consume_events_ix(
     open_orders_pubkey: &Pubkey,
     minting_rounds: &Pubkey,
     signer: &Keypair,
-    limit: u16
+    limit: u16,
 ) -> Instruction {
     let accounts = get_consume_events_accounts(
         cypher_group,
@@ -277,7 +216,7 @@ pub fn get_consume_events_ix(
         dex_market_state,
         minting_rounds,
         cypher_user_pubkey,
-        open_orders_pubkey
+        open_orders_pubkey,
     );
     Instruction {
         program_id: cypher::ID,
@@ -305,7 +244,7 @@ fn get_consume_events_accounts(
     minting_rounds: &Pubkey,
     cypher_user_pubkey: &Pubkey,
     open_orders_pubkey: &Pubkey,
-) -> Vec<AccountMeta> {    
+) -> Vec<AccountMeta> {
     let crank_authority = derive_dex_market_authority(&cypher_market.dex_market).0;
     vec![
         AccountMeta::new(cypher_group.self_address, false),
@@ -319,3 +258,60 @@ fn get_consume_events_accounts(
     ]
 }
 
+pub fn get_settle_funds_ix(
+    cypher_group: &CypherGroup,
+    cypher_market: &CypherMarket,
+    cypher_token: &CypherToken,
+    dex_market_state: &MarketStateV2,
+    cypher_user_pubkey: &Pubkey,
+    open_orders_pubkey: &Pubkey,
+    signer: &Keypair,
+) -> Instruction {
+    let accounts = get_settle_funds_accounts(
+        cypher_group,
+        cypher_market,
+        cypher_token,
+        dex_market_state,
+        cypher_user_pubkey,
+        open_orders_pubkey,
+        signer,
+    );
+
+    Instruction {
+        program_id: cypher::ID,
+        accounts,
+        data: MarketInstruction::SettleFunds.pack(),
+    }
+}
+
+fn get_settle_funds_accounts(
+    cypher_group: &CypherGroup,
+    cypher_market: &CypherMarket,
+    cypher_token: &CypherToken,
+    dex_market_state: &MarketStateV2,
+    cypher_user_pubkey: &Pubkey,
+    open_orders_pubkey: &Pubkey,
+    signer: &Keypair,
+) -> Vec<AccountMeta> {
+    let dex_vault_signer = gen_dex_vault_signer_key(
+        dex_market_state.vault_signer_nonce,
+        &cypher_market.dex_market,
+    )
+    .unwrap();
+    vec![
+        AccountMeta::new(cypher_group.self_address, false),
+        AccountMeta::new_readonly(cypher_group.vault_signer, false),
+        AccountMeta::new(*cypher_user_pubkey, false),
+        AccountMeta::new_readonly(signer.pubkey(), true),
+        AccountMeta::new(cypher_token.mint, false),
+        AccountMeta::new(cypher_token.vault, false),
+        AccountMeta::new(cypher_group.quote_vault(), false),
+        AccountMeta::new(cypher_market.dex_market, false),
+        AccountMeta::new(*open_orders_pubkey, false),
+        AccountMeta::new(identity(dex_market_state.coin_vault).to_pubkey(), false),
+        AccountMeta::new(identity(dex_market_state.pc_vault).to_pubkey(), false),
+        AccountMeta::new_readonly(dex_vault_signer, false),
+        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(dex::id(), false),
+    ]
+}

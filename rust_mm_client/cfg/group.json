@@ -31,6 +31,12 @@
                     "tokenIndex": 1
                 },
                 {
+                    "symbol": "LIQTEST",
+                    "mint": "H4GHmyg98AP42fQHrCP7UQAJQHk4fcNCb8FRDmEt4ZyM",
+                    "decimals": 0,
+                    "tokenIndex": 2
+                },
+                {
                     "symbol": "SOLETH",
                     "mint": "27EkpsHsrLaE3ZPg4FiFoba67XB5DMb1YvhXa2bHewtr",
                     "decimals": 0,
@@ -87,6 +93,22 @@
                     "bids": "CMVnqTP2Zk6DAVxKrsBxhULr571NR9kGuFsUathxxtZm",
                     "asks": "7nMWc9HZRunYruWhpc3yB9QcGCs92w9qadcLTbfCL52H",
                     "eventQueue": "A4jYzbC7pwP9z84Li4yNTb7R3GyCBR39kNEKUJwWqx7S"
+                },
+                {
+                    "name": "LIQTEST",
+                    "baseSymbol": "LIQTEST",
+                    "quoteSymbol": "USDC",
+                    "marketType": "Index",
+                    "pairBaseSymbol": "",
+                    "pairQuoteSymbol": "",
+                    "address": "7FrSqQSz5wZm9BJb43DT2p335emZdA9gigfmUa51L1dv",
+                    "baseDecimals": 0,
+                    "quoteDecimals": 6,
+                    "marketIndex": 2,
+                    "bids": "DZpcKUs17sSP8jsqKcHZDtEJB38fc4AvAXXamQ99CuVA",
+                    "asks": "ADwFjCFQ72sRNhnuXn69kwwjNd3BU7pvEaAEs96GwJdC",
+                    "eventQueue": "J3JNCTrpTmQTmikXpPeQFTqwYrZUZhU8kbwKoYz5QJZH"
+
                 },
                 {
                     "name": "SOL/ETH",
