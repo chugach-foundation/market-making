@@ -1,0 +1,14 @@
+{
+    "wallet": "C:\\Users\\warde\\.config\\solana\\default-id.json",
+    "cluster": "mainnet",
+    "inventoryManagerConfig": {
+        "initialCapital": 1000,
+        "maxQuote": 250000,
+        "shapeNum": 1,
+        "shapeDenom": 100000,
+        "spread": 50
+    },
+    "market": {
+        "name": "SOL/ETH"
+    }
+}
