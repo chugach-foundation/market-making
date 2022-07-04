@@ -26,8 +26,8 @@ cypher = { path = "../../cypher-protocol/programs/cypher", features = ["no-entry
 cypher-tester = { path="../../cypher-protocol/tester" }
 jet-proto-math = { git = "https://github.com/chugach-foundation/jet-program-libraries.git", rev="ac8909b" }
 jet-proto-proc-macros = { git = "https://github.com/chugach-foundation/jet-program-libraries.git", rev="ac8909b" }
-anchor-lang = { git = "https://github.com/chugach-foundation/anchor.git", rev="e14de2e" }
-anchor-client = { git = "https://github.com/chugach-foundation/anchor.git", rev="e14de2e" }
+anchor-lang = { git = "https://github.com/chugach-foundation/anchor.git", rev="9131d9f" }
+anchor-client = { git = "https://github.com/chugach-foundation/anchor.git", rev="9131d9f" }
 spl-token = { version = "3.1.1", features = ["no-entrypoint"] }
 fraction = "0.10.0"  
 spl-math = "0.1.0"

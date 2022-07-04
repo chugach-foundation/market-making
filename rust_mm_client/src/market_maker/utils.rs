@@ -176,7 +176,6 @@ fn get_new_order_v3_accounts(
         cypher_group: cypher_group.self_address,
         vault_signer: cypher_group.vault_signer,
         price_history: cypher_market.price_history,
-        minting_rounds: cypher_market.minting_rounds,
         cypher_user: *cypher_user_pubkey,
         user_signer: signer.pubkey(),
         c_asset_mint: cypher_token.mint,

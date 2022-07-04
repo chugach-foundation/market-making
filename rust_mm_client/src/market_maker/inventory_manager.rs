@@ -92,13 +92,7 @@ impl InventoryManager {
         cypher_group: &CypherGroup,
         cypher_token: &CypherToken,
     ) -> i64 {
-        let c_asset = cypher_user.get_c_asset(self.market_idx).unwrap();
         let user_pos = cypher_user.get_position(self.market_idx).unwrap();
-
-        info!(
-            "[INVMGR-{}] Account minted: {}. Account collateral: {}",
-            self.config.market.name, c_asset.debt_shares, c_asset.collateral
-        );
 
         info!(
             "[INVMGR-{}] Base Borrows: {}. Base Deposits: {}",
@@ -128,12 +122,12 @@ impl InventoryManager {
 
         info!(
             "[INVMGR-{}] Open Orders Coin Free: {}. Open Orders Coin Total: {}.",
-            self.config.market.name, c_asset.oo_info.coin_free, c_asset.oo_info.coin_total,
+            self.config.market.name, user_pos.oo_info.coin_free, user_pos.oo_info.coin_total,
         );
 
         info!(
             "[INVMGR-{}] Open Orders Price Coin Free: {}. Open Orders Price Coin Total: {}.",
-            self.config.market.name, c_asset.oo_info.pc_free, c_asset.oo_info.pc_total,
+            self.config.market.name, user_pos.oo_info.pc_free, user_pos.oo_info.pc_total,
         );
 
         let div: Number = 10_u64.checked_pow(6).unwrap().into();
