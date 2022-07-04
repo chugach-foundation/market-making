@@ -22,7 +22,7 @@ bitflags = "1.3"
 safe-transmute = "0.11.2"
 arrayref = "0.3.6"
 base64 = "0.13.0"
-cypher = { path = "../../cypher-protocol/programs/cypher", features = ["no-entrypoint", "mainnet-beta" ] }
+cypher = { path = "../../cypher-protocol/programs/cypher", features = ["no-entrypoint"] }
 cypher-tester = { path="../../cypher-protocol/tester" }
 jet-proto-math = { git = "https://github.com/chugach-foundation/jet-program-libraries.git", rev="ac8909b" }
 jet-proto-proc-macros = { git = "https://github.com/chugach-foundation/jet-program-libraries.git", rev="ac8909b" }
