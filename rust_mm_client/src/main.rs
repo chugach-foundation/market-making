@@ -28,7 +28,8 @@ use solana_sdk::{
 use std::{fs::File, io::Read, str::FromStr, sync::Arc};
 use tokio::sync::broadcast::channel;
 use utils::{
-    derive_quote_token_address, get_init_open_orders_ix, get_zero_copy_account, init_cypher_user,
+    derive_quote_token_address, get_init_open_orders_ix, get_request_airdrop_ix,
+    get_zero_copy_account, init_cypher_user,
 };
 
 use crate::{
@@ -415,12 +416,66 @@ async fn _check_cypher_balance(
 
     let amount_rem = initial_capital_native - total_quote_deposits;
 
-    info!(
-        "Depositing quote token (native): {} - {}",
-        amount_rem,
-        amount_rem.as_u64(0)
-    );
+    info!("Depositing quote token (native): {}.", amount_rem);
 
+    if config.cluster == "devnet" {
+        match request_airdrop(owner, Arc::clone(&rpc_client)).await {
+            Ok(_) => (),
+            Err(e) => {
+                warn!("There was an error requesting airdrop: {:?}", e);
+                return Err(MarketMakerError::ErrorDepositing);
+            }
+        }
+    }
+
+    deposit_quote_token(
+        owner,
+        cypher_user_pubkey,
+        cypher_group,
+        rpc_client,
+        amount_rem,
+    )
+    .await
+}
+
+async fn request_airdrop(
+    owner: &Keypair,
+    rpc_client: Arc<RpcClient>,
+) -> Result<(), MarketMakerError> {
+    let airdrop_ix = get_request_airdrop_ix(&owner.pubkey(), 10_000_000_000);
+
+    let mut builder = FastTxnBuilder::new();
+    for ix in airdrop_ix {
+        builder.add(ix);
+    }
+    let hash = rpc_client.get_latest_blockhash().await.unwrap();
+    let tx = builder.build(hash, owner, None);
+    let res = rpc_client
+        .send_and_confirm_transaction_with_spinner(&tx)
+        .await;
+
+    match res {
+        Ok(s) => {
+            info!(
+                "Successfully requested airdrop. Transaction signature: {}",
+                s.to_string()
+            );
+            Ok(())
+        }
+        Err(e) => {
+            warn!("There was an error requesting airdrop: {}", e.to_string());
+            Err(MarketMakerError::ErrorDepositing)
+        }
+    }
+}
+
+async fn deposit_quote_token(
+    owner: &Keypair,
+    cypher_user_pubkey: &Pubkey,
+    cypher_group: &CypherGroup,
+    rpc_client: Arc<RpcClient>,
+    amount: Number,
+) -> Result<(), MarketMakerError> {
     let source_ata = derive_quote_token_address(owner.pubkey());
 
     let ixs = get_deposit_collateral_ix(
@@ -429,7 +484,7 @@ async fn _check_cypher_balance(
         &cypher_group.quote_vault(),
         &source_ata,
         &owner.pubkey(),
-        amount_rem.as_u64(0),
+        amount.as_u64(0),
     );
     let mut builder = FastTxnBuilder::new();
     for ix in ixs {

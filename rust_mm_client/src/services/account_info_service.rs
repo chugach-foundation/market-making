@@ -9,7 +9,7 @@ use {
     solana_client::{client_error::ClientError, nonblocking::rpc_client::RpcClient},
     solana_sdk::{commitment_config::CommitmentConfig, pubkey::Pubkey},
     std::{sync::Arc, time::Duration},
-    tokio::{task, time::sleep},
+    tokio::time::sleep,
 };
 
 pub struct AccountInfoService {

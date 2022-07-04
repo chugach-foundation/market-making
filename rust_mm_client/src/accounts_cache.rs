@@ -1,5 +1,4 @@
 use {
-    dashmap::mapref::one::RefMut,
     dashmap::{mapref::one::Ref, DashMap},
     log::warn,
     solana_sdk::account::Account,
@@ -35,10 +34,6 @@ impl AccountsCache {
 
     pub fn get(&self, key: &Pubkey) -> Option<Ref<'_, Pubkey, AccountState>> {
         self.map.get(key)
-    }
-
-    pub fn get_mut(&self, key: &Pubkey) -> Option<RefMut<'_, Pubkey, AccountState>> {
-        self.map.get_mut(key)
     }
 
     pub fn insert(&self, key: Pubkey, data: AccountState) -> Result<(), AccountsCacheError> {

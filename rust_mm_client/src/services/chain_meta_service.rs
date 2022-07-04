@@ -5,8 +5,7 @@ use solana_sdk::hash::Hash;
 use std::sync::Arc;
 use tokio::sync::broadcast::{channel, Receiver};
 use tokio::sync::Mutex;
-use tokio::{sync::RwLock, time::sleep};
-use tokio::{task, time::Duration};
+use tokio::{sync::RwLock, time::{sleep, Duration}};
 
 pub struct ChainMetaService {
     client: Arc<RpcClient>,
@@ -97,10 +96,5 @@ impl ChainMetaService {
     pub async fn get_latest_blockhash(self: &Arc<Self>) -> Hash {
         //Copy and return hash
         *self.recent_blockhash.read().await
-    }
-
-    #[inline(always)]
-    pub async fn get_latest_slot(&self) -> u64 {
-        *self.slot.read().await
     }
 }

@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{str::FromStr, sync::Arc};
 
 use anchor_lang::{Owner, ZeroCopy};
 use arrayref::array_ref;
@@ -139,4 +139,21 @@ pub fn get_init_open_orders_ix(
         data,
         program_id: cypher::ID,
     }]
+}
+
+pub fn get_request_airdrop_ix(signer: &Pubkey, amount: u64) -> Vec<Instruction> {
+    let token_account = derive_quote_token_address(*signer);
+    let ixs = get_request_builder()
+        .accounts(test_driver::accounts::FaucetToUser {
+            faucet_info: Pubkey::from_str("9euKg1WZtat7iupnqZJPhVFUq1Eg3VJVAdAsv5T88Nf1").unwrap(),
+            mint: quote_mint::ID,
+            mint_authority: Pubkey::from_str("FSaWrTD8sCqZKEbTXKeK5duAZ6wcvVDZgS8Wbp2JAMvb")
+                .unwrap(),
+            target: token_account,
+            token_program: spl_token::ID,
+        })
+        .args(test_driver::instruction::FaucetToUser { amount })
+        .instructions()
+        .unwrap();
+    ixs
 }
