@@ -977,6 +977,7 @@ dependencies = [
  "solana-program-test",
  "solana-sdk",
  "spl-token",
+ "test-driver",
 ]
 
 [[package]]
@@ -2952,6 +2953,7 @@ dependencies = [
  "solana-client",
  "solana-sdk",
  "solana-transaction-status",
+ "spl-associated-token-account",
  "spl-math",
  "spl-token",
  "static_assertions",

@@ -7,8 +7,9 @@ use cypher::{
     constants::{B_CYPHER_USER, B_OPEN_ORDERS},
     quote_mint,
 };
-use cypher_tester::{associated_token, dex, get_request_builder};
+use cypher_tester::{associated_token, dex, get_request_builder, get_faucet_request_builder};
 use serum_dex::instruction::MarketInstruction;
+use solana_account_decoder::parse_token::UiTokenAmount;
 use solana_client::{client_error::ClientError, nonblocking::rpc_client::RpcClient};
 use solana_sdk::{
     account::Account,
@@ -18,7 +19,7 @@ use solana_sdk::{
     signature::Keypair,
     signer::Signer,
     system_program,
-    sysvar::SysvarId,
+    sysvar::SysvarId, commitment_config::CommitmentConfig,
 };
 
 use crate::{fast_tx_builder::FastTxnBuilder, market_maker::derive_dex_market_authority};
@@ -60,6 +61,24 @@ pub fn derive_quote_token_address(wallet_address: Pubkey) -> Pubkey {
         &associated_token::ID,
     )
     .0
+}
+
+pub async fn get_token_account(
+    client: Arc<RpcClient>,
+    token_account: &Pubkey,
+) -> Result<UiTokenAmount, ClientError> {
+    let ta_res = client
+        .get_token_account_balance_with_commitment(token_account, CommitmentConfig::confirmed())
+        .await;
+
+    let ta = match ta_res {
+        Ok(ta) => ta.value,
+        Err(e) => {
+            return Err(e);
+        }
+    };
+
+    Ok(ta)
 }
 
 pub async fn init_cypher_user(
@@ -141,15 +160,17 @@ pub fn get_init_open_orders_ix(
     }]
 }
 
-pub fn get_request_airdrop_ix(signer: &Pubkey, amount: u64) -> Vec<Instruction> {
-    let token_account = derive_quote_token_address(*signer);
-    let ixs = get_request_builder()
+pub fn get_request_airdrop_ix(
+    token_account: &Pubkey,
+    amount: u64
+) -> Vec<Instruction> {
+    let ixs = get_faucet_request_builder()
         .accounts(test_driver::accounts::FaucetToUser {
             faucet_info: Pubkey::from_str("9euKg1WZtat7iupnqZJPhVFUq1Eg3VJVAdAsv5T88Nf1").unwrap(),
             mint: quote_mint::ID,
-            mint_authority: Pubkey::from_str("FSaWrTD8sCqZKEbTXKeK5duAZ6wcvVDZgS8Wbp2JAMvb")
+            mint_authority: Pubkey::from_str("ALtS7g1kR3T1YkAZFo8SwKP36nhCKVf11Eh4xDsxKY1U")
                 .unwrap(),
-            target: token_account,
+            target: *token_account,
             token_program: spl_token::ID,
         })
         .args(test_driver::instruction::FaucetToUser { amount })

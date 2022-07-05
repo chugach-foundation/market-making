@@ -13,7 +13,7 @@ use clap::Parser;
 use config::*;
 use cypher::{
     constants::QUOTE_TOKEN_IDX,
-    states::{CypherGroup, CypherUser},
+    states::{CypherGroup, CypherUser}, quote_mint,
 };
 use cypher_tester::parse_dex_account;
 use fast_tx_builder::FastTxnBuilder;
@@ -25,11 +25,12 @@ use solana_client::nonblocking::rpc_client::RpcClient;
 use solana_sdk::{
     commitment_config::CommitmentConfig, pubkey::Pubkey, signature::Keypair, signer::Signer,
 };
+use spl_associated_token_account::instruction::{AssociatedTokenAccountInstruction, create_associated_token_account};
 use std::{fs::File, io::Read, str::FromStr, sync::Arc};
 use tokio::sync::broadcast::channel;
 use utils::{
     derive_quote_token_address, get_init_open_orders_ix, get_request_airdrop_ix,
-    get_zero_copy_account, init_cypher_user,
+    get_zero_copy_account, init_cypher_user, get_token_account,
 };
 
 use crate::{
@@ -442,18 +443,28 @@ async fn request_airdrop(
     owner: &Keypair,
     rpc_client: Arc<RpcClient>,
 ) -> Result<(), MarketMakerError> {
-    let airdrop_ix = get_request_airdrop_ix(&owner.pubkey(), 10_000_000_000);
+    let token_account = derive_quote_token_address(owner.pubkey());
+    let airdrop_ix = get_request_airdrop_ix(&token_account, 10_000_000_000);
 
     let mut builder = FastTxnBuilder::new();
+
+    let token_account_res = get_token_account(Arc::clone(&rpc_client), &token_account).await;
+    match token_account_res {
+        Ok(_) => (),
+        Err(_) => {
+            info!("Quote token account does not exist, creating one.");
+            builder.add(create_associated_token_account(&owner.pubkey(), &owner.pubkey(), &quote_mint::ID));
+        },
+    }
     for ix in airdrop_ix {
         builder.add(ix);
     }
+
     let hash = rpc_client.get_latest_blockhash().await.unwrap();
     let tx = builder.build(hash, owner, None);
     let res = rpc_client
         .send_and_confirm_transaction_with_spinner(&tx)
         .await;
-
     match res {
         Ok(s) => {
             info!(
@@ -597,22 +608,23 @@ async fn _init_open_orders(
     let tx = builder.build(hash, signer, None);
     let res = rpc_client
         .send_and_confirm_transaction_with_spinner(&tx)
-        .await;
-
-    match res {
-        Ok(s) => {
-            info!(
-                "Successfully created open orders account. Transaction signature: {}",
-                s.to_string()
-            );
-            Ok(())
-        }
-        Err(e) => {
-            warn!(
-                "There was an error creating the open orders account: {}",
-                e.to_string()
-            );
-            Err(MarketMakerError::ErrorCreatingOpenOrders)
-        }
-    }
+        .await
+        .unwrap();
+    Ok(())
+    // match res {
+    //     Ok(s) => {
+    //         info!(
+    //             "Successfully created open orders account. Transaction signature: {}",
+    //             s.to_string()
+    //         );
+    //         Ok(())
+    //     }
+    //     Err(e) => {
+    //         warn!(
+    //             "There was an error creating the open orders account: {}",
+    //             e.to_string()
+    //         );
+    //         Err(MarketMakerError::ErrorCreatingOpenOrders)
+    //     }
+    // }
 }

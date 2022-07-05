@@ -147,7 +147,9 @@ impl OrderManager {
         info!("[ORDERMGR-{}] Received order book update.", self.symbol);
         let bids = ob.bids.read().await;
         let asks = ob.asks.read().await;
-        if asks.is_empty() && !bids.is_empty() {
+        if asks.is_empty() && bids.is_empty() {
+            info!("ORDERMGR-{}] Latest ob for market is empty!", self.symbol)
+        } else if asks.is_empty() && !bids.is_empty() {
             info!(
                 "[ORDERMGR-{}] Latest ob for market: {} bids / best bid {}@{} - 0 asks ",
                 self.symbol,

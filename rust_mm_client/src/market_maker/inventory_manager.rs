@@ -95,24 +95,10 @@ impl InventoryManager {
         let user_pos = cypher_user.get_position(self.market_idx).unwrap();
 
         info!(
-            "[INVMGR-{}] Base Borrows: {}. Base Deposits: {}",
-            self.config.market.name,
-            user_pos.base_borrows(),
-            user_pos.base_deposits(),
-        );
-
-        info!(
             "[INVMGR-{}] Native Borrows: {}. Native Deposits: {}",
             self.config.market.name,
             user_pos.native_borrows(cypher_token),
             user_pos.native_deposits(cypher_token),
-        );
-
-        info!(
-            "[INVMGR-{}] Total Borrows: {}. Total Deposits: {}",
-            self.config.market.name,
-            user_pos.total_borrows(cypher_token),
-            user_pos.total_deposits(cypher_token),
         );
 
         let long_pos = user_pos.total_deposits(cypher_token).as_u64(0);

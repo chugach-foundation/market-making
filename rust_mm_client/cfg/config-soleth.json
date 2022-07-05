@@ -3,7 +3,7 @@
     "cluster": "devnet",
     "inventoryManagerConfig": {
         "initialCapital": 1000,
-        "maxQuote": 250000,
+        "maxQuote": 25000,
         "shapeNum": 1,
         "shapeDenom": 100000,
         "spread": 50

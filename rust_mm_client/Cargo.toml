@@ -30,6 +30,7 @@ jet-proto-proc-macros = { git = "https://github.com/chugach-foundation/jet-progr
 anchor-lang = { git = "https://github.com/chugach-foundation/anchor.git", rev="9131d9f" }
 anchor-client = { git = "https://github.com/chugach-foundation/anchor.git", rev="9131d9f" }
 spl-token = { version = "3.1.1", features = ["no-entrypoint"] }
+spl-associated-token-account = "1.0.5"
 fraction = "0.10.0"  
 spl-math = "0.1.0"
 serde = "1.0.137"

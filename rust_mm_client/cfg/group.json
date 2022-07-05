@@ -14,13 +14,13 @@
             "cluster": "devnet",
             "name": "devnet1",
             "quoteSymbol": "USDC",
-            "address": "HYavcbs9dVDduTWCZuf8aKK4XqhRZkstVjAADc6RzHsq",
+            "address": "6s2P2RjZiUzJ4yZRKsiGVsUhWgJZQUaSDFGYC3ZhTRat",
             "programId": "8XTphgpN4xo22LFYZK7AWxGktDSThqmp9cZNB5Pap9o4",
             "serumProgramId": "",
             "tokens": [
                 {
                     "symbol": "SOLETH",
-                    "mint": "7WKiV4Md4LcuMk4UrjUv9WtX2CPrDNiAtse8PbD7dGdM",
+                    "mint": "75TDTqJhHgg7sFED4YXsb9AXr9uuCEHXeknearmAPrES",
                     "decimals": 0,
                     "tokenIndex": 0
                 },
@@ -49,13 +49,13 @@
                     "marketType": "Pair",
                     "pairBaseSymbol": "SOL",
                     "pairQuoteSymbol": "ETH",
-                    "address": "HLujsehhZJygY4caXV2RiYm8K3YbceRDw1X7WgwDM2W8",
+                    "address": "B1M5s5v5DeaXjipcD3MYhUsfqcDcSwcRnD28MmAKfxz3",
                     "baseDecimals": 0,
                     "quoteDecimals": 6,
-                    "marketIndex": 3,
-                    "bids": "6C6eqNrWKPSKykCfpVMdGYdMLPdk75KADaZSPsw1syUy",
-                    "asks": "BWPxATd1B7MXTz5PVGYhsAzet4KFgk9MjSHAqTiRWbAF",
-                    "eventQueue": "86pNdPBxqqJoURT8h76yuh2Jwix5JrbA6dYdtaMXeZvf"
+                    "marketIndex": 0,
+                    "bids": "6mXpFi67AKJJjmVaWWf1HneEQNgbZ8KqpkUqs9BuBhnn",
+                    "asks": "EcPtEZWPuQk3Rn87xDzZeXQcv7Nvow4HoQgwThVBM1ur",
+                    "eventQueue": "97hg9311PWd1wfvrE6uK4146qfvzFGLJ5mdJECkLfF13"
                 }
             ]
         },
