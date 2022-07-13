@@ -216,7 +216,7 @@ impl MarketMaker {
 
         // get the keys necessary to initialize the account info service
         let market_config = group_config
-            .get_market(self.config.cluster.as_str(), mm_market_config.name.as_str())
+            .get_market(mm_market_config.name.as_str())
             .unwrap();
 
         let market_pubkey = Pubkey::from_str(market_config.address.as_str()).unwrap();

@@ -1,7 +1,6 @@
 use cypher::states::{CypherGroup, CypherMarket, CypherUser};
 use log::{info, warn};
-use serum_dex::state::MarketStateV2;
-use solana_sdk::{instruction::Instruction, pubkey::Pubkey, signature::Keypair};
+use solana_sdk::{pubkey::Pubkey, signature::Keypair};
 use std::{sync::Arc, time::Duration};
 use tokio::sync::{
     broadcast::{channel, Receiver, Sender},

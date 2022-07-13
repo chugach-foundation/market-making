@@ -1,7 +1,7 @@
 use crate::config::MarketMakerConfig;
 use cypher::states::{CypherGroup, CypherToken, CypherUser};
 use jet_proto_math::Number;
-use log::{info, warn};
+use log::info;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 

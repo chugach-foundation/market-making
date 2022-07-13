@@ -25,6 +25,12 @@
                     "tokenIndex": 0
                 },
                 {
+                    "symbol": "BTCETH",
+                    "mint": "BUKh5At7yV6QQ7fnEJ2NVKs8dCMQWKktKewPPV6apDvw",
+                    "decimals": 0,
+                    "tokenIndex": 1
+                },
+                {
                     "symbol": "USDC",
                     "mint": "DPhNUKVhnrkdbq37GUgTUBRbZLsvziX1p5e5YUXyjBsb",
                     "decimals": 6,
@@ -39,6 +45,10 @@
                 {
                     "symbol": "ETH",
                     "address": "2ciUuGZiee5macAMeQ7bHGTJtwcYTgnt6jdmQnnKZrfu"
+                },
+                {
+                    "symbol": "BTC",
+                    "address": "3m1y5h2uv7EQL3KaJZehvAJa4yDNvgc5yAdL9KPMKwvk"
                 }
             ],
             "markets": [
@@ -56,6 +66,21 @@
                     "bids": "6mXpFi67AKJJjmVaWWf1HneEQNgbZ8KqpkUqs9BuBhnn",
                     "asks": "EcPtEZWPuQk3Rn87xDzZeXQcv7Nvow4HoQgwThVBM1ur",
                     "eventQueue": "97hg9311PWd1wfvrE6uK4146qfvzFGLJ5mdJECkLfF13"
+                },
+                {
+                    "name": "BTC/ETH",
+                    "baseSymbol": "BTCETH",
+                    "quoteSymbol": "USDC",
+                    "marketType": "Pair",
+                    "pairBaseSymbol": "BTC",
+                    "pairQuoteSymbol": "ETH",
+                    "address": "6j9ML4VPX9DBxN8MA4C4MFFySvvnjSeuSC1WopWyX4jQ",
+                    "baseDecimals": 0,
+                    "quoteDecimals": 6,
+                    "marketIndex": 1,
+                    "bids": "61Yo2DDZ5WJSmMNBLHLF8tyB6YPt7xY9GZ9XRbBGk3wE",
+                    "asks": "HXuiUHnhhVRMAACEFhcgQqGHuvQXtDHFvqpVGAUnBw9T",
+                    "eventQueue": "6iv6kweL2QnyCE2KgJbyesFnx7dNGq4SMu4d5D3qboqt"
                 }
             ]
         },

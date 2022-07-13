@@ -13,7 +13,8 @@ use clap::Parser;
 use config::*;
 use cypher::{
     constants::QUOTE_TOKEN_IDX,
-    states::{CypherGroup, CypherUser}, quote_mint,
+    quote_mint,
+    states::{CypherGroup, CypherUser},
 };
 use cypher_tester::parse_dex_account;
 use fast_tx_builder::FastTxnBuilder;
@@ -25,12 +26,12 @@ use solana_client::nonblocking::rpc_client::RpcClient;
 use solana_sdk::{
     commitment_config::CommitmentConfig, pubkey::Pubkey, signature::Keypair, signer::Signer,
 };
-use spl_associated_token_account::instruction::{AssociatedTokenAccountInstruction, create_associated_token_account};
+use spl_associated_token_account::instruction::create_associated_token_account;
 use std::{fs::File, io::Read, str::FromStr, sync::Arc};
 use tokio::sync::broadcast::channel;
 use utils::{
-    derive_quote_token_address, get_init_open_orders_ix, get_request_airdrop_ix,
-    get_zero_copy_account, init_cypher_user, get_token_account,
+    derive_quote_token_address, get_init_open_orders_ix, get_request_airdrop_ix, get_token_account,
+    get_zero_copy_account, init_cypher_user,
 };
 
 use crate::{
@@ -182,7 +183,7 @@ async fn main() -> Result<(), MarketMakerError> {
     };
 
     let market_config = cypher_group_config
-        .get_market(mm_config.cluster.as_str(), mm_config.market.name.as_str())
+        .get_market(mm_config.market.name.as_str())
         .unwrap();
 
     let market_pubkey = Pubkey::from_str(market_config.address.as_str()).unwrap();
@@ -329,11 +330,10 @@ async fn _get_or_init_open_orders(
     }
 }
 
-#[allow(clippy::borrowed_box)]
 async fn _get_or_init_cypher_user(
     owner: &Keypair,
     cypher_group_pubkey: &Pubkey,
-    cypher_group: &Box<CypherGroup>,
+    cypher_group: &CypherGroup,
     cypher_user_pubkey: &Pubkey,
     rpc_client: Arc<RpcClient>,
     config: &MarketMakerConfig,
@@ -385,12 +385,11 @@ async fn _get_or_init_cypher_user(
     }
 }
 
-#[allow(clippy::borrowed_box)]
 async fn _check_cypher_balance(
     owner: &Keypair,
     cypher_user_pubkey: &Pubkey,
-    cypher_user: &Box<CypherUser>,
-    cypher_group: &Box<CypherGroup>,
+    cypher_user: &CypherUser,
+    cypher_group: &CypherGroup,
     config: &MarketMakerConfig,
     rpc_client: Arc<RpcClient>,
 ) -> Result<(), MarketMakerError> {
@@ -452,9 +451,17 @@ async fn request_airdrop(
     match token_account_res {
         Ok(_) => (),
         Err(_) => {
-            info!("Quote token account does not exist, creating one.");
-            builder.add(create_associated_token_account(&owner.pubkey(), &owner.pubkey(), &quote_mint::ID));
-        },
+            info!(
+                "Quote token account does not exist, creating account with key: {} for mint {}.",
+                token_account,
+                quote_mint::ID
+            );
+            builder.add(create_associated_token_account(
+                &owner.pubkey(),
+                &owner.pubkey(),
+                &quote_mint::ID,
+            ));
+        }
     }
     for ix in airdrop_ix {
         builder.add(ix);
@@ -608,23 +615,21 @@ async fn _init_open_orders(
     let tx = builder.build(hash, signer, None);
     let res = rpc_client
         .send_and_confirm_transaction_with_spinner(&tx)
-        .await
-        .unwrap();
-    Ok(())
-    // match res {
-    //     Ok(s) => {
-    //         info!(
-    //             "Successfully created open orders account. Transaction signature: {}",
-    //             s.to_string()
-    //         );
-    //         Ok(())
-    //     }
-    //     Err(e) => {
-    //         warn!(
-    //             "There was an error creating the open orders account: {}",
-    //             e.to_string()
-    //         );
-    //         Err(MarketMakerError::ErrorCreatingOpenOrders)
-    //     }
-    // }
+        .await;
+    match res {
+        Ok(s) => {
+            info!(
+                "Successfully created open orders account. Transaction signature: {}",
+                s.to_string()
+            );
+            Ok(())
+        }
+        Err(e) => {
+            warn!(
+                "There was an error creating the open orders account: {}",
+                e.to_string()
+            );
+            Err(MarketMakerError::ErrorCreatingOpenOrders)
+        }
+    }
 }

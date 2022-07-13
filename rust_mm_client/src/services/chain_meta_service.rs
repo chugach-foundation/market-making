@@ -5,7 +5,10 @@ use solana_sdk::hash::Hash;
 use std::sync::Arc;
 use tokio::sync::broadcast::{channel, Receiver};
 use tokio::sync::Mutex;
-use tokio::{sync::RwLock, time::{sleep, Duration}};
+use tokio::{
+    sync::RwLock,
+    time::{sleep, Duration},
+};
 
 pub struct ChainMetaService {
     client: Arc<RpcClient>,

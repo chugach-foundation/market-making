@@ -7,19 +7,20 @@ use cypher::{
     constants::{B_CYPHER_USER, B_OPEN_ORDERS},
     quote_mint,
 };
-use cypher_tester::{associated_token, dex, get_request_builder, get_faucet_request_builder};
+use cypher_tester::{associated_token, dex, get_faucet_request_builder, get_request_builder};
 use serum_dex::instruction::MarketInstruction;
 use solana_account_decoder::parse_token::UiTokenAmount;
 use solana_client::{client_error::ClientError, nonblocking::rpc_client::RpcClient};
 use solana_sdk::{
     account::Account,
+    commitment_config::CommitmentConfig,
     instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
     rent::Rent,
     signature::Keypair,
     signer::Signer,
     system_program,
-    sysvar::SysvarId, commitment_config::CommitmentConfig,
+    sysvar::SysvarId,
 };
 
 use crate::{fast_tx_builder::FastTxnBuilder, market_maker::derive_dex_market_authority};
@@ -160,10 +161,7 @@ pub fn get_init_open_orders_ix(
     }]
 }
 
-pub fn get_request_airdrop_ix(
-    token_account: &Pubkey,
-    amount: u64
-) -> Vec<Instruction> {
+pub fn get_request_airdrop_ix(token_account: &Pubkey, amount: u64) -> Vec<Instruction> {
     let ixs = get_faucet_request_builder()
         .accounts(test_driver::accounts::FaucetToUser {
             faucet_info: Pubkey::from_str("9euKg1WZtat7iupnqZJPhVFUq1Eg3VJVAdAsv5T88Nf1").unwrap(),
