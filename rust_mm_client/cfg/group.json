@@ -75,7 +75,7 @@
                     "symbol": "SOLETH",
                     "mint": "GpMKPYrFWrVYTKPmiMCP5bQe1QnEjp44hg3jgdfy9eV7",
                     "decimals": 0,
-                    "tokenIndex": 2
+                    "tokenIndex": 0
                 },
                 {
                     "symbol": "USDC",
@@ -105,7 +105,7 @@
                     "address": "Cgwx6FvJe5UVDKobaNLBUSn6ySQJEKJoWF3cRWPQsrwM",
                     "baseDecimals": 0,
                     "quoteDecimals": 6,
-                    "marketIndex": 2,
+                    "marketIndex": 0,
                     "bids": "7SnbmCWyNx6GLqEXEsoXdogcRoZe8ikwensR5zWXaout",
                     "asks": "HqExi2VuJaBgXH3MJdvuvRZX3c3N5yx3hHXnY1YgB44c",
                     "eventQueue": "EEa4MLKmKJtorfRoGJ8AkxeazqHGho2mFm18fXbdKX2H"
