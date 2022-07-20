@@ -125,21 +125,21 @@ async fn main() -> Result<(), MarketMakerError> {
     let mm_config = Arc::new(load_mm_config(config_path).unwrap());
     let cypher_config = Arc::new(load_cypher_config(CYPHER_CONFIG_PATH).unwrap());
 
-    let cluster_config = cypher_config.get_config_for_cluster(mm_config.cluster.as_str());
+    let cluster_config = cypher_config.get_config_for_cluster(mm_config.group.as_str());
 
     let keypair = load_keypair(mm_config.wallet.as_str()).unwrap();
     let pubkey = keypair.pubkey();
     info!("Loaded keypair with pubkey: {}", pubkey.to_string());
 
     let cypher_group_config =
-        Arc::new(cypher_config.get_group(mm_config.cluster.as_str()).unwrap());
+        Arc::new(cypher_config.get_group(mm_config.group.as_str()).unwrap());
 
     let cypher_group_key = Pubkey::from_str(cypher_group_config.address.as_str()).unwrap();
 
     // initialize rpc client with cluster and cluster url provided in config
     info!(
         "Initializing rpc client for cluster-{} with url: {}",
-        mm_config.cluster, cluster_config.rpc_url
+        mm_config.group, cluster_config.rpc_url
     );
     let rpc_client = Arc::new(RpcClient::new_with_commitment(
         cluster_config.rpc_url.to_string(),
@@ -418,7 +418,7 @@ async fn _check_cypher_balance(
 
     info!("Depositing quote token (native): {}.", amount_rem);
 
-    if config.cluster == "devnet" {
+    if config.group.contains("devnet") {
         match request_airdrop(owner, Arc::clone(&rpc_client)).await {
             Ok(_) => (),
             Err(e) => {

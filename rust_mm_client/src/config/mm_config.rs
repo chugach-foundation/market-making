@@ -10,7 +10,7 @@ use crate::market_maker::InventoryManagerConfig;
 #[serde(rename_all = "camelCase")]
 pub struct MarketMakerConfig {
     pub wallet: String,
-    pub cluster: String,
+    pub group: String,
     pub inventory_manager_config: InventoryManagerConfig,
     pub market: MarketConfig,
 }

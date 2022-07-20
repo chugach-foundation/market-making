@@ -35,7 +35,7 @@ impl CypherConfig {
     }
 
     pub fn get_group(&self, cluster: &str) -> Option<&CypherGroupConfig> {
-        self.groups.iter().find(|&g| g.cluster.as_str() == cluster)
+        self.groups.iter().find(|&g| g.name.as_str() == cluster)
     }
 }
 

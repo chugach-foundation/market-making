@@ -64,6 +64,55 @@
             ]
         },
         {
+            "cluster": "devnet",
+            "name": "devnet2",
+            "quoteSymbol": "USDC",
+            "address": "B9v8Nbd2X9UJmVF4ZSng1Nj6wQ9Q86LfEFUbWUw7E7XU",
+            "programId": "8Z8nDAa98hgdYCS9SyAyAesxE3ZhAq8Qo1E8v2V8VU56",
+            "serumProgramId": "",
+            "tokens": [
+                {
+                    "symbol": "SOLETH",
+                    "mint": "GpMKPYrFWrVYTKPmiMCP5bQe1QnEjp44hg3jgdfy9eV7",
+                    "decimals": 0,
+                    "tokenIndex": 2
+                },
+                {
+                    "symbol": "USDC",
+                    "mint": "DPhNUKVhnrkdbq37GUgTUBRbZLsvziX1p5e5YUXyjBsb",
+                    "decimals": 6,
+                    "tokenIndex": 15
+                }
+            ],
+            "oracles" : [
+                {
+                    "symbol": "SOL",
+                    "address": "3Mnn2fX6rQyUsyELYms1sBJyChWofzSNRoqYzvgMVz5E"
+                },
+                {
+                    "symbol": "ETH",
+                    "address": "2ciUuGZiee5macAMeQ7bHGTJtwcYTgnt6jdmQnnKZrfu"
+                }
+            ],
+            "markets": [
+                {
+                    "name": "SOL/ETH",
+                    "baseSymbol": "SOLETH",
+                    "quoteSymbol": "USDC",
+                    "marketType": "Pair",
+                    "pairBaseSymbol": "SOL",
+                    "pairQuoteSymbol": "ETH",
+                    "address": "Cgwx6FvJe5UVDKobaNLBUSn6ySQJEKJoWF3cRWPQsrwM",
+                    "baseDecimals": 0,
+                    "quoteDecimals": 6,
+                    "marketIndex": 2,
+                    "bids": "7SnbmCWyNx6GLqEXEsoXdogcRoZe8ikwensR5zWXaout",
+                    "asks": "HqExi2VuJaBgXH3MJdvuvRZX3c3N5yx3hHXnY1YgB44c",
+                    "eventQueue": "EEa4MLKmKJtorfRoGJ8AkxeazqHGho2mFm18fXbdKX2H"
+                }
+            ]
+        },
+        {
             "cluster": "mainnet",
             "name": "mainnet",
             "quoteSymbol": "USDC",

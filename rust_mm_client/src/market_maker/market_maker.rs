@@ -211,7 +211,7 @@ impl MarketMaker {
         let mm_market_config = &self.config.market;
         let group_config = self
             .cypher_config
-            .get_group(self.config.cluster.as_str())
+            .get_group(self.config.group.as_str())
             .unwrap();
 
         // get the keys necessary to initialize the account info service

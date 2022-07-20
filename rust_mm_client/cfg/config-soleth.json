@@ -1,6 +1,6 @@
 {
     "wallet": "C:\\Users\\warde\\.config\\solana\\id.json",
-    "cluster": "devnet",
+    "group": "devnet",
     "inventoryManagerConfig": {
         "initialCapital": 1000,
         "maxQuote": 25000,
