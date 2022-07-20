@@ -20,15 +20,9 @@
             "tokens": [
                 {
                     "symbol": "SOLETH",
-                    "mint": "75TDTqJhHgg7sFED4YXsb9AXr9uuCEHXeknearmAPrES",
+                    "mint": "4yveMhkZzY9uKH7rTYhs5da4JbRBkbb2KKFGbQr9PnWU",
                     "decimals": 0,
-                    "tokenIndex": 0
-                },
-                {
-                    "symbol": "BTCETH",
-                    "mint": "BUKh5At7yV6QQ7fnEJ2NVKs8dCMQWKktKewPPV6apDvw",
-                    "decimals": 0,
-                    "tokenIndex": 1
+                    "tokenIndex": 2
                 },
                 {
                     "symbol": "USDC",
@@ -59,28 +53,13 @@
                     "marketType": "Pair",
                     "pairBaseSymbol": "SOL",
                     "pairQuoteSymbol": "ETH",
-                    "address": "B1M5s5v5DeaXjipcD3MYhUsfqcDcSwcRnD28MmAKfxz3",
+                    "address": "5CPE4mGv4DwttceNTJn8jnvSwuJ8jdwfSVXDJ6sf3VR2",
                     "baseDecimals": 0,
                     "quoteDecimals": 6,
-                    "marketIndex": 0,
-                    "bids": "6mXpFi67AKJJjmVaWWf1HneEQNgbZ8KqpkUqs9BuBhnn",
-                    "asks": "EcPtEZWPuQk3Rn87xDzZeXQcv7Nvow4HoQgwThVBM1ur",
-                    "eventQueue": "97hg9311PWd1wfvrE6uK4146qfvzFGLJ5mdJECkLfF13"
-                },
-                {
-                    "name": "BTC/ETH",
-                    "baseSymbol": "BTCETH",
-                    "quoteSymbol": "USDC",
-                    "marketType": "Pair",
-                    "pairBaseSymbol": "BTC",
-                    "pairQuoteSymbol": "ETH",
-                    "address": "6j9ML4VPX9DBxN8MA4C4MFFySvvnjSeuSC1WopWyX4jQ",
-                    "baseDecimals": 0,
-                    "quoteDecimals": 6,
-                    "marketIndex": 1,
-                    "bids": "61Yo2DDZ5WJSmMNBLHLF8tyB6YPt7xY9GZ9XRbBGk3wE",
-                    "asks": "HXuiUHnhhVRMAACEFhcgQqGHuvQXtDHFvqpVGAUnBw9T",
-                    "eventQueue": "6iv6kweL2QnyCE2KgJbyesFnx7dNGq4SMu4d5D3qboqt"
+                    "marketIndex": 2,
+                    "bids": "9UUpUFPhZftdQndETvYJL9irY49XF1HWdtBwsfJ19iWZ",
+                    "asks": "6Hc5vmdwa7B2y2A8aHzqzD7zhxFDN7f55Cj2dp8vdU4n",
+                    "eventQueue": "CxTLxuxbg8zmFbezdviTbXxMtnhNi2zrbvHzQRFwsQ3E"
                 }
             ]
         },
