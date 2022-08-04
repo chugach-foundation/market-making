@@ -32,15 +32,15 @@
                 },
                 {
                     "symbol": "SOL",
-                    "mint": "",
-                    "decimals": 0,
-                    "tokenIndex": 2
+                    "mint": "GpdWGESkQRoYUYMztMs8evmWXeHZGoWdumSj69y6H9mn",
+                    "decimals": 3,
+                    "tokenIndex": 4
                 },
                 {
                     "symbol": "ETH",
-                    "mint": "",
-                    "decimals": 0,
-                    "tokenIndex": 3
+                    "mint": "7j92XnANkf6mrXUDYGmQHDwHprkDzpKcR4f6mLXxNXff",
+                    "decimals": 4,
+                    "tokenIndex": 5
                 },
                 {
                     "symbol": "USDC",
@@ -101,13 +101,13 @@
                     "marketType": "Pair",
                     "pairBaseSymbol": "SOL",
                     "pairQuoteSymbol": "USDC",
-                    "address": "CGZEW42pBzd9JXFMgrYYJnVC5AN7udTV5mHDCsCWb9jm",
-                    "baseDecimals": 0,
+                    "address": "zEYhHVmKs5yHKZ4yHUsrunSK1bS9QxveTRQJAAHwLjU",
+                    "baseDecimals": 3,
                     "quoteDecimals": 6,
-                    "marketIndex": 2,
-                    "bids": "5zNiX4f2QBNWXAdHJkpiKBcNdWc5amVRDjNeAP6r8Zwd",
-                    "asks": "ESbjQn6Cnwu6AonSizMSXyvoXaYw6dRkXt5isV5nxf7R",
-                    "eventQueue": "5R58Yv7GqdZ8GWbWeH8TwFKyJtQ5Tsg7NqXM19apjZA1"
+                    "marketIndex": 4,
+                    "bids": "A7v7b7inMhhrgoHUJveNMQZXvmo4aeSps2YjLtEKfQdK",
+                    "asks": "DwqBN81yqCzLR935v6syvxZPoeH6A91WhpcaQffk4RZA",
+                    "eventQueue": "2rqfYuy9qyw5RMssHysvWNnowEBWZuaPASGbRHQNGDj2"
                 },
                 {
                     "name": "ETH",
@@ -116,13 +116,13 @@
                     "marketType": "Pair",
                     "pairBaseSymbol": "ETH",
                     "pairQuoteSymbol": "USDC",
-                    "address": "HphFGhShqb58s4vgG6j1AytoEexu32G52VvVruVvHpkp",
-                    "baseDecimals": 0,
+                    "address": "CAWDMuZTwDHkvGUKD4NwvD5wK8uetu66f81Rwp23HdZq",
+                    "baseDecimals": 4,
                     "quoteDecimals": 6,
-                    "marketIndex": 3,
-                    "bids": "86jeuGbGa4QYi7cpC7VVFnMpcTHwKo6w5RLbSW2fVEDt",
-                    "asks": "J3LjD7NtwiK9XAmXpNdSBCgmDPHhuGWKaFwNDwPKwm8m",
-                    "eventQueue": "HGwLrPN7RYzw6yCZpKhbFxaMd6zFV1M4HWsoHJKUk8BL"
+                    "marketIndex": 5,
+                    "bids": "HS5fYSYuQF2HccPYupocWY1CsZRjN7ojo1R5DfbHAouA",
+                    "asks": "4NaDdz2pQk4s3dzjiESBvsjTCJPkPRQbPbkcyaKiYBuz",
+                    "eventQueue": "3SNcDUer66oBTz3cvWsjaKTWmN9kgGDTczCqBco851oX"
                 }
             ]
         },
