@@ -1,0 +1,14 @@
+{
+    "wallet": "C:\\Users\\warde\\OneDrive\\Documentos\\GitHub\\cypher\\market-making\\rust_mm_client\\mm_eth",
+    "group": "devnet2",
+    "inventoryManagerConfig": {
+        "initialCapital": 10000,
+        "maxQuote": 10000,
+        "shapeNum": 1,
+        "shapeDenom": 100000,
+        "spread": 50
+    },
+    "market": {
+        "name": "ETH"
+    }
+}

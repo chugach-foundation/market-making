@@ -1,6 +1,5 @@
 #![allow(dead_code)]
 use crate::providers::{CypherAccountProvider, CypherGroupProvider, OpenOrdersProvider};
-use crate::utils::derive_open_orders_address;
 use crate::{
     accounts_cache::AccountsCache,
     config::{cypher_config::CypherConfig, MarketMakerConfig},
@@ -9,8 +8,8 @@ use crate::{
     MarketMakerError,
 };
 use anchor_lang::AnchorDeserialize;
-use cypher::states::{CypherGroup, CypherUser};
-use cypher_tester::parse_dex_account;
+use cypher::client::{derive_open_orders_address, parse_dex_account};
+use cypher::{CypherUser, CypherGroup};
 use log::{info, warn};
 use safe_transmute::transmute_to_bytes;
 use serum_dex::state::{MarketStateV2, OpenOrders};

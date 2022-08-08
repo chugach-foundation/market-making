@@ -1,6 +1,5 @@
 use std::{num::NonZeroU64, sync::Arc};
-
-use cypher::states::{CypherGroup, CypherMarket, CypherToken};
+use cypher::{CypherGroup, CypherMarket, CypherToken, client::{derive_cypher_user_address, derive_open_orders_address}};
 use log::{info, warn};
 use serum_dex::{
     instruction::{CancelOrderInstructionV2, NewOrderInstructionV3, SelfTradeBehavior},
@@ -22,12 +21,10 @@ use tokio::sync::{
 
 use crate::{
     fast_tx_builder::FastTxnBuilder,
-    market_maker::{gen_client_order_id, get_cancel_order_ix, get_new_order_ix},
     providers::OrderBook,
     serum_slab::OrderBookOrder,
     services::ChainMetaService,
-    utils::{derive_cypher_user_address, derive_open_orders_address},
-    MarketMakerError,
+    MarketMakerError, market_maker::{get_cancel_order_ix, get_new_order_ix},
 };
 
 use super::QuoteVolumes;
@@ -407,11 +404,9 @@ impl OrderManager {
         if quote_vols.ask_size > 0 {
             let max_native_pc_qty_ask = quote_vols.ask_size as u64 * best_ask;
             let client_order_id = *self.client_order_id.read().await;
-            let gen_client_order_id =
-                gen_client_order_id(client_order_id as u32, false, OrderType::PostOnly);
             info!(
                 "[ORDERMGR-{}] Submitting new ask at {} for {} units at max qty pc {} with coid: {}",
-                self.symbol, best_ask, quote_vols.ask_size, max_native_pc_qty_ask, gen_client_order_id
+                self.symbol, best_ask, quote_vols.ask_size, max_native_pc_qty_ask, client_order_id
             );
 
             ixs.push(get_new_order_ix(
@@ -436,17 +431,15 @@ impl OrderManager {
                 },
             ));
             *self.client_order_id.write().await += 1;
-            new_orders.push(gen_client_order_id);
+            new_orders.push(client_order_id);
         }
 
         if quote_vols.bid_size > 0 {
             let max_native_pc_qty_bid = quote_vols.bid_size as u64 * best_bid;
             let client_order_id = *self.client_order_id.read().await;
-            let gen_client_order_id =
-                gen_client_order_id(client_order_id as u32, false, OrderType::PostOnly);
             info!(
                 "[ORDERMGR-{}] Submitting new bid at {} for {} units at max pc qty {} with coid: {}",
-                self.symbol, best_bid, quote_vols.bid_size, max_native_pc_qty_bid, gen_client_order_id
+                self.symbol, best_bid, quote_vols.bid_size, max_native_pc_qty_bid, client_order_id
             );
 
             ixs.push(get_new_order_ix(
@@ -471,7 +464,7 @@ impl OrderManager {
                 },
             ));
             *self.client_order_id.write().await += 1;
-            new_orders.push(gen_client_order_id);
+            new_orders.push(client_order_id);
         }
 
         drop(new_orders);

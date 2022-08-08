@@ -1,4 +1,4 @@
-use cypher_tester::parse_dex_account;
+use cypher::client::parse_dex_account;
 use log::{info, warn};
 use serum_dex::state::OpenOrders;
 use solana_sdk::pubkey::Pubkey;

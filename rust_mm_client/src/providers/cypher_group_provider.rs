@@ -1,4 +1,4 @@
-use cypher::states::CypherGroup;
+use cypher::{CypherGroup, client::get_zero_copy_account};
 use log::{info, warn};
 use solana_sdk::pubkey::Pubkey;
 use std::sync::Arc;
@@ -7,7 +7,7 @@ use tokio::sync::{
     Mutex,
 };
 
-use crate::{accounts_cache::AccountsCache, utils::get_zero_copy_account, MarketMakerError};
+use crate::{accounts_cache::AccountsCache, MarketMakerError};
 
 pub struct CypherGroupProvider {
     cache: Arc<AccountsCache>,

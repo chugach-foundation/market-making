@@ -1,5 +1,5 @@
 use crate::config::MarketMakerConfig;
-use cypher::states::{CypherGroup, CypherToken, CypherUser};
+use cypher::{CypherUser, CypherGroup, CypherToken};
 use jet_proto_math::Number;
 use log::info;
 use serde::{Deserialize, Serialize};
@@ -95,10 +95,10 @@ impl InventoryManager {
         let user_pos = cypher_user.get_position(self.market_idx).unwrap();
 
         info!(
-            "[INVMGR-{}] Native Borrows: {}. Native Deposits: {}",
+            "[INVMGR-{}] Base Borrows: {}. Base Deposits: {}",
             self.config.market.name,
-            user_pos.native_borrows(cypher_token),
-            user_pos.native_deposits(cypher_token),
+            user_pos.base_borrows(),
+            user_pos.base_deposits(),
         );
 
         let long_pos = user_pos.total_deposits(cypher_token).as_u64(0);
@@ -117,9 +117,9 @@ impl InventoryManager {
         );
 
         let div: Number = 10_u64.checked_pow(6).unwrap().into();
-        let assets_val = cypher_user.get_assets_value(cypher_group).unwrap();
+        let assets_val = cypher_user.get_assets_value(cypher_group);
         let assets_val_ui = assets_val / div;
-        let liabs_val = cypher_user.get_liabs_value(cypher_group).unwrap();
+        let liabs_val = cypher_user.get_liabilities_value(cypher_group);
         let liabs_val_ui = liabs_val / div;
 
         info!(

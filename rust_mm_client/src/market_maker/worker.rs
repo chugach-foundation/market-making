@@ -1,4 +1,4 @@
-use cypher::states::{CypherGroup, CypherMarket, CypherUser};
+use cypher::{CypherUser, CypherGroup, CypherMarket};
 use log::{info, warn};
 use solana_sdk::{pubkey::Pubkey, signature::Keypair};
 use std::{sync::Arc, time::Duration};
@@ -166,7 +166,7 @@ impl Worker {
                 continue;
             };
             let cypher_group = maybe_group.unwrap();
-            let cypher_token = cypher_group.get_cypher_token(self.config.market_index);
+            let cypher_token = cypher_group.get_cypher_token(self.config.market_index).unwrap();
 
             let quote_vols = self
                 .inventory_manager
@@ -231,7 +231,7 @@ impl Worker {
             return Ok(());
         };
         let cypher_group = maybe_group.unwrap();
-        let cypher_token = cypher_group.get_cypher_token(self.config.market_index);
+        let cypher_token = cypher_group.get_cypher_token(self.config.market_index).unwrap();
 
         let quote_vols = self
             .inventory_manager
@@ -300,7 +300,7 @@ impl Worker {
                         *self.cypher_group.write().await = Some(*cg);
 
                         let market_idx = cg.get_market_idx(self.config.c_asset_mint).unwrap();
-                        let market = cg.get_cypher_market(market_idx);
+                        let market = cg.get_cypher_market(market_idx).unwrap();
 
                         info!(
                             "[WORKER-{}] Market update: Oracle price: {} - TWAP: {}",

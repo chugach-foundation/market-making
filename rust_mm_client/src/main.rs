@@ -12,12 +12,12 @@ mod utils;
 use clap::Parser;
 use config::*;
 use cypher::{
+    client::{derive_cypher_user_address, derive_open_orders_address, parse_dex_account, get_zero_copy_account},
     constants::QUOTE_TOKEN_IDX,
-    quote_mint,
-    states::{CypherGroup, CypherUser},
+    CypherGroup, CypherUser, quote_mint
 };
-use cypher_tester::parse_dex_account;
 use fast_tx_builder::FastTxnBuilder;
+use faucet::get_request_airdrop_ix;
 use jet_proto_math::Number;
 use log::{info, warn};
 use logging::init_logger;
@@ -30,13 +30,13 @@ use spl_associated_token_account::instruction::create_associated_token_account;
 use std::{fs::File, io::Read, str::FromStr, sync::Arc};
 use tokio::sync::broadcast::channel;
 use utils::{
-    derive_quote_token_address, get_init_open_orders_ix, get_request_airdrop_ix, get_token_account,
-    get_zero_copy_account, init_cypher_user,
+    derive_quote_token_address, get_init_open_orders_ix, get_token_account,
+    init_cypher_user,
 };
 
 use crate::{
     market_maker::MarketMaker,
-    utils::{derive_cypher_user_address, derive_open_orders_address, get_deposit_collateral_ix},
+    utils::get_deposit_collateral_ix,
 };
 
 // rework this, maybe ask user for input as well
@@ -394,7 +394,7 @@ async fn _check_cypher_balance(
     rpc_client: Arc<RpcClient>,
 ) -> Result<(), MarketMakerError> {
     let position = cypher_user.get_position(QUOTE_TOKEN_IDX).unwrap();
-    let quote_token = cypher_group.get_cypher_token(QUOTE_TOKEN_IDX);
+    let quote_token = cypher_group.get_cypher_token(QUOTE_TOKEN_IDX).unwrap();
 
     let initial_capital_native: Number = (config.inventory_manager_config.initial_capital
         * 10_u64.checked_pow(quote_token.decimals().into()).unwrap())
@@ -463,9 +463,7 @@ async fn request_airdrop(
             ));
         }
     }
-    for ix in airdrop_ix {
-        builder.add(ix);
-    }
+    builder.add(airdrop_ix);
 
     let hash = rpc_client.get_latest_blockhash().await.unwrap();
     let tx = builder.build(hash, owner, None);
@@ -496,7 +494,7 @@ async fn deposit_quote_token(
 ) -> Result<(), MarketMakerError> {
     let source_ata = derive_quote_token_address(owner.pubkey());
 
-    let ixs = get_deposit_collateral_ix(
+    let ix = get_deposit_collateral_ix(
         &cypher_group.self_address,
         cypher_user_pubkey,
         &cypher_group.quote_vault(),
@@ -505,9 +503,7 @@ async fn deposit_quote_token(
         amount.as_u64(0),
     );
     let mut builder = FastTxnBuilder::new();
-    for ix in ixs {
-        builder.add(ix);
-    }
+    builder.add(ix);
     let hash = rpc_client.get_latest_blockhash().await.unwrap();
     let tx = builder.build(hash, owner, None);
     let res = rpc_client
@@ -599,7 +595,7 @@ async fn _init_open_orders(
     signer: &Keypair,
     rpc_client: Arc<RpcClient>,
 ) -> Result<(), MarketMakerError> {
-    let ixs = get_init_open_orders_ix(
+    let ix = get_init_open_orders_ix(
         cypher_group_pubkey,
         cypher_user_pubkey,
         cypher_market,
@@ -608,9 +604,7 @@ async fn _init_open_orders(
     );
 
     let mut builder = FastTxnBuilder::new();
-    for ix in ixs {
-        builder.add(ix);
-    }
+    builder.add(ix);
     let hash = rpc_client.get_latest_blockhash().await.unwrap();
     let tx = builder.build(hash, signer, None);
     let res = rpc_client
