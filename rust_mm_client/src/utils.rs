@@ -1,18 +1,19 @@
-use anchor_spl::{associated_token, token::spl_token};
-use cypher::{
-    client::{deposit_collateral_ix, init_cypher_user_ix, init_open_orders_ix},
-    quote_mint,
-    utils::{derive_cypher_user_address, derive_dex_market_authority},
+use {
+    crate::fast_tx_builder::FastTxnBuilder,
+    anchor_spl::{associated_token, token::spl_token},
+    cypher::{
+        client::{deposit_collateral_ix, init_cypher_user_ix, init_open_orders_ix},
+        quote_mint,
+        utils::{derive_cypher_user_address, derive_dex_market_authority},
+    },
+    solana_account_decoder::parse_token::UiTokenAmount,
+    solana_client::{client_error::ClientError, nonblocking::rpc_client::RpcClient},
+    solana_sdk::{
+        commitment_config::CommitmentConfig, instruction::Instruction, pubkey::Pubkey,
+        signature::Keypair, signer::Signer,
+    },
+    std::sync::Arc,
 };
-use solana_account_decoder::parse_token::UiTokenAmount;
-use solana_client::{client_error::ClientError, nonblocking::rpc_client::RpcClient};
-use solana_sdk::{
-    commitment_config::CommitmentConfig, instruction::Instruction, pubkey::Pubkey,
-    signature::Keypair, signer::Signer,
-};
-use std::sync::Arc;
-
-use crate::fast_tx_builder::FastTxnBuilder;
 
 pub fn derive_quote_token_address(wallet_address: Pubkey) -> Pubkey {
     Pubkey::find_program_address(

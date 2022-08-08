@@ -1,13 +1,14 @@
-use cypher::{utils::get_zero_copy_account, CypherUser};
-use log::{info, warn};
-use solana_sdk::pubkey::Pubkey;
-use std::sync::Arc;
-use tokio::sync::{
-    broadcast::{channel, Receiver, Sender},
-    Mutex,
+use {
+    crate::{accounts_cache::AccountsCache, MarketMakerError},
+    cypher::{utils::get_zero_copy_account, CypherUser},
+    log::{info, warn},
+    solana_sdk::pubkey::Pubkey,
+    std::sync::Arc,
+    tokio::sync::{
+        broadcast::{channel, Receiver, Sender},
+        Mutex,
+    },
 };
-
-use crate::{accounts_cache::AccountsCache, MarketMakerError};
 
 pub struct CypherAccountProvider {
     cache: Arc<AccountsCache>,

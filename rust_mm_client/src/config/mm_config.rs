@@ -1,10 +1,9 @@
-use serde::{Deserialize, Serialize};
-use serde_json;
-use std::error::Error;
-use std::fs::File;
-use std::io::BufReader;
-
-use crate::market_maker::InventoryManagerConfig;
+use {
+    crate::market_maker::InventoryManagerConfig,
+    serde::{Deserialize, Serialize},
+    serde_json,
+    std::{error::Error, fs::File, io::BufReader},
+};
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

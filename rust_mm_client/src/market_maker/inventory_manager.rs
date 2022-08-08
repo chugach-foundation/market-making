@@ -1,9 +1,11 @@
-use crate::config::MarketMakerConfig;
-use cypher::{CypherGroup, CypherToken, CypherUser};
-use jet_proto_math::Number;
-use log::info;
-use serde::{Deserialize, Serialize};
-use std::sync::Arc;
+use {
+    crate::config::MarketMakerConfig,
+    cypher::{CypherGroup, CypherToken, CypherUser},
+    jet_proto_math::Number,
+    log::info,
+    serde::{Deserialize, Serialize},
+    std::sync::Arc,
+};
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

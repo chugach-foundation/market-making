@@ -1,8 +1,7 @@
 use {
     dashmap::{mapref::one::Ref, DashMap},
     log::warn,
-    solana_sdk::account::Account,
-    solana_sdk::pubkey::Pubkey,
+    solana_sdk::{account::Account, pubkey::Pubkey},
     tokio::sync::broadcast::{channel, Sender},
 };
 

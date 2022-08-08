@@ -1,37 +1,37 @@
-use cypher::{
-    utils::{derive_cypher_user_address, derive_open_orders_address},
-    CypherGroup, CypherMarket, CypherToken,
+use {
+    super::QuoteVolumes,
+    crate::{
+        fast_tx_builder::FastTxnBuilder,
+        market_maker::{get_cancel_order_ix, get_new_order_ix},
+        providers::OrderBook,
+        serum_slab::OrderBookOrder,
+        services::ChainMetaService,
+        MarketMakerError,
+    },
+    cypher::{
+        utils::{derive_cypher_user_address, derive_open_orders_address},
+        CypherGroup, CypherMarket, CypherToken,
+    },
+    log::{info, warn},
+    serum_dex::{
+        instruction::{CancelOrderInstructionV2, NewOrderInstructionV3, SelfTradeBehavior},
+        matching::{OrderType, Side},
+        state::{MarketStateV2, OpenOrders},
+    },
+    solana_client::{client_error::ClientError, nonblocking::rpc_client::RpcClient},
+    solana_sdk::{
+        hash::Hash,
+        instruction::Instruction,
+        signature::{Keypair, Signature},
+        signer::Signer,
+        transaction::Transaction,
+    },
+    std::{num::NonZeroU64, sync::Arc},
+    tokio::sync::{
+        broadcast::{channel, Receiver},
+        Mutex, RwLock,
+    },
 };
-use log::{info, warn};
-use serum_dex::{
-    instruction::{CancelOrderInstructionV2, NewOrderInstructionV3, SelfTradeBehavior},
-    matching::{OrderType, Side},
-    state::{MarketStateV2, OpenOrders},
-};
-use solana_client::{client_error::ClientError, nonblocking::rpc_client::RpcClient};
-use solana_sdk::{
-    hash::Hash,
-    instruction::Instruction,
-    signature::{Keypair, Signature},
-    signer::Signer,
-    transaction::Transaction,
-};
-use std::{num::NonZeroU64, sync::Arc};
-use tokio::sync::{
-    broadcast::{channel, Receiver},
-    Mutex, RwLock,
-};
-
-use crate::{
-    fast_tx_builder::FastTxnBuilder,
-    market_maker::{get_cancel_order_ix, get_new_order_ix},
-    providers::OrderBook,
-    serum_slab::OrderBookOrder,
-    services::ChainMetaService,
-    MarketMakerError,
-};
-
-use super::QuoteVolumes;
 
 pub struct ManagedOrder {
     pub order_id: u128,

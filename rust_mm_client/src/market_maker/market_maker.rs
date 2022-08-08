@@ -1,28 +1,29 @@
 #![allow(dead_code)]
-use crate::providers::{CypherAccountProvider, CypherGroupProvider, OpenOrdersProvider};
-use crate::{
-    accounts_cache::AccountsCache,
-    config::{cypher_config::CypherConfig, MarketMakerConfig},
-    providers::orderbook_provider::{OrderBook, OrderBookProvider},
-    services::{AccountInfoService, ChainMetaService},
-    MarketMakerError,
+use {
+    super::order_manager::OrderManager,
+    super::{InventoryManager, Worker, WorkerConfig},
+    crate::providers::{CypherAccountProvider, CypherGroupProvider, OpenOrdersProvider},
+    crate::{
+        accounts_cache::AccountsCache,
+        config::{cypher_config::CypherConfig, MarketMakerConfig},
+        providers::orderbook_provider::{OrderBook, OrderBookProvider},
+        services::{AccountInfoService, ChainMetaService},
+        MarketMakerError,
+    },
+    anchor_lang::AnchorDeserialize,
+    cypher::utils::{derive_open_orders_address, parse_dex_account},
+    cypher::{CypherGroup, CypherUser},
+    log::{info, warn},
+    safe_transmute::transmute_to_bytes,
+    serum_dex::state::{MarketStateV2, OpenOrders},
+    solana_client::{client_error::ClientError, nonblocking::rpc_client::RpcClient},
+    solana_sdk::signature::Keypair,
+    solana_sdk::{commitment_config::CommitmentConfig, pubkey::Pubkey},
+    std::convert::identity,
+    std::{str::FromStr, sync::Arc},
+    tokio::sync::broadcast::{channel, Receiver, Sender},
+    tokio::task::JoinHandle,
 };
-use anchor_lang::AnchorDeserialize;
-use cypher::utils::{derive_open_orders_address, parse_dex_account};
-use cypher::{CypherGroup, CypherUser};
-use log::{info, warn};
-use safe_transmute::transmute_to_bytes;
-use serum_dex::state::{MarketStateV2, OpenOrders};
-use solana_client::{client_error::ClientError, nonblocking::rpc_client::RpcClient};
-use solana_sdk::signature::Keypair;
-use solana_sdk::{commitment_config::CommitmentConfig, pubkey::Pubkey};
-use std::convert::identity;
-use std::{str::FromStr, sync::Arc};
-use tokio::sync::broadcast::{channel, Receiver, Sender};
-use tokio::task::JoinHandle;
-
-use super::order_manager::OrderManager;
-use super::{InventoryManager, Worker, WorkerConfig};
 
 pub struct MarketMaker {
     // services

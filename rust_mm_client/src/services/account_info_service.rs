@@ -1,15 +1,16 @@
-use tokio::sync::{
-    broadcast::{channel, Receiver},
-    Mutex,
-};
-
 use {
     crate::accounts_cache::{AccountState, AccountsCache},
     log::{info, warn},
     solana_client::{client_error::ClientError, nonblocking::rpc_client::RpcClient},
     solana_sdk::{commitment_config::CommitmentConfig, pubkey::Pubkey},
     std::{sync::Arc, time::Duration},
-    tokio::time::sleep,
+    tokio::{
+        sync::{
+            broadcast::{channel, Receiver},
+            Mutex,
+        },
+        time::sleep,
+    },
 };
 
 pub struct AccountInfoService {

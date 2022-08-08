@@ -9,35 +9,36 @@ mod serum_slab;
 mod services;
 mod utils;
 
-use clap::Parser;
-use config::*;
-use cypher::{
-    constants::QUOTE_TOKEN_IDX,
-    quote_mint,
-    utils::{
-        derive_cypher_user_address, derive_open_orders_address, get_zero_copy_account,
-        parse_dex_account,
+use {
+    crate::{market_maker::MarketMaker, utils::get_deposit_collateral_ix},
+    clap::Parser,
+    config::*,
+    cypher::{
+        constants::QUOTE_TOKEN_IDX,
+        quote_mint,
+        utils::{
+            derive_cypher_user_address, derive_open_orders_address, get_zero_copy_account,
+            parse_dex_account,
+        },
+        CypherGroup, CypherUser,
     },
-    CypherGroup, CypherUser,
+    fast_tx_builder::FastTxnBuilder,
+    faucet::get_request_airdrop_ix,
+    jet_proto_math::Number,
+    log::{info, warn},
+    logging::init_logger,
+    serum_dex::state::OpenOrders,
+    solana_client::nonblocking::rpc_client::RpcClient,
+    solana_sdk::{
+        commitment_config::CommitmentConfig, pubkey::Pubkey, signature::Keypair, signer::Signer,
+    },
+    spl_associated_token_account::instruction::create_associated_token_account,
+    std::{fs::File, io::Read, str::FromStr, sync::Arc},
+    tokio::sync::broadcast::channel,
+    utils::{
+        derive_quote_token_address, get_init_open_orders_ix, get_token_account, init_cypher_user,
+    },
 };
-use fast_tx_builder::FastTxnBuilder;
-use faucet::get_request_airdrop_ix;
-use jet_proto_math::Number;
-use log::{info, warn};
-use logging::init_logger;
-use serum_dex::state::OpenOrders;
-use solana_client::nonblocking::rpc_client::RpcClient;
-use solana_sdk::{
-    commitment_config::CommitmentConfig, pubkey::Pubkey, signature::Keypair, signer::Signer,
-};
-use spl_associated_token_account::instruction::create_associated_token_account;
-use std::{fs::File, io::Read, str::FromStr, sync::Arc};
-use tokio::sync::broadcast::channel;
-use utils::{
-    derive_quote_token_address, get_init_open_orders_ix, get_token_account, init_cypher_user,
-};
-
-use crate::{market_maker::MarketMaker, utils::get_deposit_collateral_ix};
 
 // rework this, maybe ask user for input as well
 pub const CYPHER_CONFIG_PATH: &str = "./cfg/group.json";

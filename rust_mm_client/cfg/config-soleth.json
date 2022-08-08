@@ -1,6 +1,6 @@
 {
-    "wallet": "C:\\Users\\warde\\.config\\solana\\id.json",
-    "group": "devnet",
+    "wallet": "/Users/hoak/.config/solana/mm_soleth.json",
+    "group": "devnet2",
     "inventoryManagerConfig": {
         "initialCapital": 1000,
         "maxQuote": 25000,

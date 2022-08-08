@@ -1,15 +1,15 @@
-use cypher::{CypherGroup, CypherMarket, CypherUser};
-use log::{info, warn};
-use solana_sdk::{pubkey::Pubkey, signature::Keypair};
-use std::{sync::Arc, time::Duration};
-use tokio::sync::{
-    broadcast::{channel, Receiver, Sender},
-    Mutex, RwLock,
+use {
+    super::{order_manager::OrderManager, InventoryManager},
+    crate::MarketMakerError,
+    cypher::{CypherGroup, CypherMarket, CypherUser},
+    log::{info, warn},
+    solana_sdk::{pubkey::Pubkey, signature::Keypair},
+    std::{sync::Arc, time::Duration},
+    tokio::sync::{
+        broadcast::{channel, Receiver, Sender},
+        Mutex, RwLock,
+    },
 };
-
-use crate::MarketMakerError;
-
-use super::{order_manager::OrderManager, InventoryManager};
 
 pub struct WorkerConfig {
     pub market: Pubkey,

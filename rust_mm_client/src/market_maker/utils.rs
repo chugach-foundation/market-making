@@ -1,14 +1,16 @@
-use cypher::{
-    client::{cancel_order_ix, new_order_v3_ix, ToPubkey},
-    utils::{derive_dex_market_authority, gen_dex_vault_signer_key},
-    CypherGroup, CypherMarket, CypherToken,
+use {
+    cypher::{
+        client::{cancel_order_ix, new_order_v3_ix, ToPubkey},
+        utils::{derive_dex_market_authority, gen_dex_vault_signer_key},
+        CypherGroup, CypherMarket, CypherToken,
+    },
+    serum_dex::{
+        instruction::{CancelOrderInstructionV2, NewOrderInstructionV3},
+        state::MarketStateV2,
+    },
+    solana_sdk::{instruction::Instruction, pubkey::Pubkey, signature::Keypair, signer::Signer},
+    std::convert::identity,
 };
-use serum_dex::{
-    instruction::{CancelOrderInstructionV2, NewOrderInstructionV3},
-    state::MarketStateV2,
-};
-use solana_sdk::{instruction::Instruction, pubkey::Pubkey, signature::Keypair, signer::Signer};
-use std::convert::identity;
 
 #[allow(clippy::too_many_arguments)]
 pub fn get_cancel_order_ix(
