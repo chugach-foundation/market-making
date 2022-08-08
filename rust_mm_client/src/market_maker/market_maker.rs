@@ -8,8 +8,8 @@ use crate::{
     MarketMakerError,
 };
 use anchor_lang::AnchorDeserialize;
-use cypher::client::{derive_open_orders_address, parse_dex_account};
-use cypher::{CypherUser, CypherGroup};
+use cypher::utils::{derive_open_orders_address, parse_dex_account};
+use cypher::{CypherGroup, CypherUser};
 use log::{info, warn};
 use safe_transmute::transmute_to_bytes;
 use serum_dex::state::{MarketStateV2, OpenOrders};

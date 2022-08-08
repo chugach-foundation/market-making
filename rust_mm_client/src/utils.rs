@@ -1,21 +1,18 @@
-use std::{str::FromStr, sync::Arc};
-use anchor_lang::{Owner, ZeroCopy, ToAccountMetas, AnchorSerialize};
-use anchor_spl::{token::spl_token, associated_token};
-use arrayref::array_ref;
-use bytemuck::checked::from_bytes;
-use cypher::{client::{derive_cypher_user_address, init_cypher_user_ix, derive_dex_market_authority, init_open_orders_ix, deposit_collateral_ix}, quote_mint};
+use anchor_spl::{associated_token, token::spl_token};
+use cypher::{
+    client::{deposit_collateral_ix, init_cypher_user_ix, init_open_orders_ix},
+    quote_mint,
+    utils::{derive_cypher_user_address, derive_dex_market_authority},
+};
 use solana_account_decoder::parse_token::UiTokenAmount;
 use solana_client::{client_error::ClientError, nonblocking::rpc_client::RpcClient};
 use solana_sdk::{
-    account::Account,
-    commitment_config::CommitmentConfig,
-    instruction::Instruction,
-    pubkey::Pubkey,
-    signature::Keypair,
-    signer::Signer,
+    commitment_config::CommitmentConfig, instruction::Instruction, pubkey::Pubkey,
+    signature::Keypair, signer::Signer,
 };
+use std::sync::Arc;
 
-use crate::{fast_tx_builder::FastTxnBuilder};
+use crate::fast_tx_builder::FastTxnBuilder;
 
 pub fn derive_quote_token_address(wallet_address: Pubkey) -> Pubkey {
     Pubkey::find_program_address(
@@ -54,19 +51,15 @@ pub async fn init_cypher_user(
 ) -> Result<(), ClientError> {
     let (address, bump) = derive_cypher_user_address(group_address, &owner.pubkey());
 
-    let ix = init_cypher_user_ix(
-        group_address,
-        &address,
-        &owner.pubkey(),
-        bump
-    );
-    println!("{:?}", ix.data);
+    let ix = init_cypher_user_ix(group_address, &address, &owner.pubkey(), bump);
 
     let mut builder = FastTxnBuilder::new();
     builder.add(ix);
     let hash = rpc.get_latest_blockhash().await?;
     let tx = builder.build(hash, owner, None);
-    rpc.send_and_confirm_transaction_with_spinner(&tx).await.unwrap();
+    rpc.send_and_confirm_transaction_with_spinner(&tx)
+        .await
+        .unwrap();
     Ok(())
 }
 
@@ -84,7 +77,7 @@ pub fn get_deposit_collateral_ix(
         cypher_pc_vault,
         signer,
         source_token_account,
-        amount
+        amount,
     )
 }
 
@@ -102,7 +95,6 @@ pub fn get_init_open_orders_ix(
         signer,
         cypher_market,
         open_orders,
-        &market_authority
+        &market_authority,
     )
 }
-

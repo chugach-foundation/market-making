@@ -1,4 +1,4 @@
-use cypher::{CypherUser, CypherGroup, CypherMarket};
+use cypher::{CypherGroup, CypherMarket, CypherUser};
 use log::{info, warn};
 use solana_sdk::{pubkey::Pubkey, signature::Keypair};
 use std::{sync::Arc, time::Duration};
@@ -166,7 +166,9 @@ impl Worker {
                 continue;
             };
             let cypher_group = maybe_group.unwrap();
-            let cypher_token = cypher_group.get_cypher_token(self.config.market_index).unwrap();
+            let cypher_token = cypher_group
+                .get_cypher_token(self.config.market_index)
+                .unwrap();
 
             let quote_vols = self
                 .inventory_manager
@@ -231,7 +233,9 @@ impl Worker {
             return Ok(());
         };
         let cypher_group = maybe_group.unwrap();
-        let cypher_token = cypher_group.get_cypher_token(self.config.market_index).unwrap();
+        let cypher_token = cypher_group
+            .get_cypher_token(self.config.market_index)
+            .unwrap();
 
         let quote_vols = self
             .inventory_manager

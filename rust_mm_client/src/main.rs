@@ -12,9 +12,13 @@ mod utils;
 use clap::Parser;
 use config::*;
 use cypher::{
-    client::{derive_cypher_user_address, derive_open_orders_address, parse_dex_account, get_zero_copy_account},
     constants::QUOTE_TOKEN_IDX,
-    CypherGroup, CypherUser, quote_mint
+    quote_mint,
+    utils::{
+        derive_cypher_user_address, derive_open_orders_address, get_zero_copy_account,
+        parse_dex_account,
+    },
+    CypherGroup, CypherUser,
 };
 use fast_tx_builder::FastTxnBuilder;
 use faucet::get_request_airdrop_ix;
@@ -30,14 +34,10 @@ use spl_associated_token_account::instruction::create_associated_token_account;
 use std::{fs::File, io::Read, str::FromStr, sync::Arc};
 use tokio::sync::broadcast::channel;
 use utils::{
-    derive_quote_token_address, get_init_open_orders_ix, get_token_account,
-    init_cypher_user,
+    derive_quote_token_address, get_init_open_orders_ix, get_token_account, init_cypher_user,
 };
 
-use crate::{
-    market_maker::MarketMaker,
-    utils::get_deposit_collateral_ix,
-};
+use crate::{market_maker::MarketMaker, utils::get_deposit_collateral_ix};
 
 // rework this, maybe ask user for input as well
 pub const CYPHER_CONFIG_PATH: &str = "./cfg/group.json";
@@ -131,8 +131,7 @@ async fn main() -> Result<(), MarketMakerError> {
     let pubkey = keypair.pubkey();
     info!("Loaded keypair with pubkey: {}", pubkey.to_string());
 
-    let cypher_group_config =
-        Arc::new(cypher_config.get_group(mm_config.group.as_str()).unwrap());
+    let cypher_group_config = Arc::new(cypher_config.get_group(mm_config.group.as_str()).unwrap());
 
     let cypher_group_key = Pubkey::from_str(cypher_group_config.address.as_str()).unwrap();
 

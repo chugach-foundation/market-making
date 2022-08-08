@@ -1,15 +1,14 @@
-use std::convert::identity;
-use cypher::{CypherGroup, CypherMarket, CypherToken, client::{cancel_order_ix, derive_dex_market_authority, gen_dex_vault_signer_key, ToPubkey, new_order_v3_ix}};
+use cypher::{
+    client::{cancel_order_ix, new_order_v3_ix, ToPubkey},
+    utils::{derive_dex_market_authority, gen_dex_vault_signer_key},
+    CypherGroup, CypherMarket, CypherToken,
+};
 use serum_dex::{
     instruction::{CancelOrderInstructionV2, NewOrderInstructionV3},
     state::MarketStateV2,
 };
-use solana_sdk::{
-    instruction::Instruction,
-    pubkey::Pubkey,
-    signature::Keypair,
-    signer::Signer,
-};
+use solana_sdk::{instruction::Instruction, pubkey::Pubkey, signature::Keypair, signer::Signer};
+use std::convert::identity;
 
 #[allow(clippy::too_many_arguments)]
 pub fn get_cancel_order_ix(
@@ -22,7 +21,10 @@ pub fn get_cancel_order_ix(
     signer: &Keypair,
     ix_data: CancelOrderInstructionV2,
 ) -> Instruction {
-    let dex_vault_signer = gen_dex_vault_signer_key(dex_market_state.vault_signer_nonce, &cypher_market.dex_market);
+    let dex_vault_signer = gen_dex_vault_signer_key(
+        dex_market_state.vault_signer_nonce,
+        &cypher_market.dex_market,
+    );
     let prune_authority = derive_dex_market_authority(&cypher_market.dex_market);
     cancel_order_ix(
         &cypher_group.self_address,
@@ -41,7 +43,7 @@ pub fn get_cancel_order_ix(
         &identity(dex_market_state.coin_vault).to_pubkey(),
         &identity(dex_market_state.pc_vault).to_pubkey(),
         &dex_vault_signer,
-        ix_data
+        ix_data,
     )
 }
 
@@ -56,7 +58,10 @@ pub fn get_new_order_ix(
     signer: &Keypair,
     ix_data: NewOrderInstructionV3,
 ) -> Instruction {
-    let dex_vault_signer = gen_dex_vault_signer_key(dex_market_state.vault_signer_nonce, &cypher_market.dex_market);
+    let dex_vault_signer = gen_dex_vault_signer_key(
+        dex_market_state.vault_signer_nonce,
+        &cypher_market.dex_market,
+    );
     new_order_v3_ix(
         &cypher_group.self_address,
         &cypher_group.vault_signer,
@@ -75,6 +80,6 @@ pub fn get_new_order_ix(
         &identity(dex_market_state.coin_vault).to_pubkey(),
         &identity(dex_market_state.pc_vault).to_pubkey(),
         &dex_vault_signer,
-        ix_data
+        ix_data,
     )
 }

@@ -1,7 +1,4 @@
-#![allow(
-    dead_code,
-    clippy::upper_case_acronyms
-)]
+#![allow(dead_code, clippy::upper_case_acronyms)]
 use arrayref::array_refs;
 use bytemuck::{cast_mut, cast_ref, cast_slice, Pod, Zeroable};
 

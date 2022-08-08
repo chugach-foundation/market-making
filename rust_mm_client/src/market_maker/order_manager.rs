@@ -1,5 +1,7 @@
-use std::{num::NonZeroU64, sync::Arc};
-use cypher::{CypherGroup, CypherMarket, CypherToken, client::{derive_cypher_user_address, derive_open_orders_address}};
+use cypher::{
+    utils::{derive_cypher_user_address, derive_open_orders_address},
+    CypherGroup, CypherMarket, CypherToken,
+};
 use log::{info, warn};
 use serum_dex::{
     instruction::{CancelOrderInstructionV2, NewOrderInstructionV3, SelfTradeBehavior},
@@ -14,6 +16,7 @@ use solana_sdk::{
     signer::Signer,
     transaction::Transaction,
 };
+use std::{num::NonZeroU64, sync::Arc};
 use tokio::sync::{
     broadcast::{channel, Receiver},
     Mutex, RwLock,
@@ -21,10 +24,11 @@ use tokio::sync::{
 
 use crate::{
     fast_tx_builder::FastTxnBuilder,
+    market_maker::{get_cancel_order_ix, get_new_order_ix},
     providers::OrderBook,
     serum_slab::OrderBookOrder,
     services::ChainMetaService,
-    MarketMakerError, market_maker::{get_cancel_order_ix, get_new_order_ix},
+    MarketMakerError,
 };
 
 use super::QuoteVolumes;

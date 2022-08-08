@@ -1,4 +1,4 @@
-use cypher::{CypherUser, client::get_zero_copy_account};
+use cypher::{utils::get_zero_copy_account, CypherUser};
 use log::{info, warn};
 use solana_sdk::pubkey::Pubkey;
 use std::sync::Arc;
