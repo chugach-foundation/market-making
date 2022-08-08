@@ -23,7 +23,7 @@ use {
         CypherGroup, CypherUser,
     },
     fast_tx_builder::FastTxnBuilder,
-    faucet::get_request_airdrop_ix,
+    faucet::request_airdrop_ix,
     jet_proto_math::Number,
     log::{info, warn},
     logging::init_logger,
@@ -443,7 +443,7 @@ async fn request_airdrop(
     rpc_client: Arc<RpcClient>,
 ) -> Result<(), MarketMakerError> {
     let token_account = derive_quote_token_address(owner.pubkey());
-    let airdrop_ix = get_request_airdrop_ix(&token_account, 10_000_000_000);
+    let airdrop_ix = request_airdrop_ix(&token_account, 10_000_000_000);
 
     let mut builder = FastTxnBuilder::new();
 

@@ -212,6 +212,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "anchor-discriminator"
+version = "0.1.0"
+source = "git+https://github.com/chugach-foundation/cypher-cpi.git?rev=34f639c#34f639c9b946a010339a0cb34fa8e87f7bca92cd"
+dependencies = [
+ "sha2 0.9.9",
+]
+
+[[package]]
 name = "anchor-gen"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -984,8 +992,9 @@ dependencies = [
 [[package]]
 name = "cypher"
 version = "0.1.0"
-source = "git+https://github.com/chugach-foundation/cypher-cpi.git?rev=2065a76#2065a76f5ad29718ca0b7c4a9c22e23d51e660b7"
+source = "git+https://github.com/chugach-foundation/cypher-cpi.git?rev=34f639c#34f639c9b946a010339a0cb34fa8e87f7bca92cd"
 dependencies = [
+ "anchor-discriminator",
  "anchor-gen",
  "anchor-lang",
  "anchor-spl",
@@ -993,7 +1002,6 @@ dependencies = [
  "bytemuck",
  "jet-proto-math",
  "serum_dex 0.5.6 (git+https://github.com/chugach-foundation/serum-dex.git?rev=2fab8b9)",
- "sha2 0.9.9",
  "solana-sdk",
 ]
 
@@ -1331,15 +1339,15 @@ dependencies = [
 [[package]]
 name = "faucet"
 version = "0.1.0"
-source = "git+https://github.com/chugach-foundation/cypher-cpi.git?rev=2065a76#2065a76f5ad29718ca0b7c4a9c22e23d51e660b7"
+source = "git+https://github.com/chugach-foundation/cypher-cpi.git?rev=34f639c#34f639c9b946a010339a0cb34fa8e87f7bca92cd"
 dependencies = [
+ "anchor-discriminator",
  "anchor-gen",
  "anchor-lang",
  "anchor-spl",
  "bytemuck",
  "jet-proto-math",
  "serum_dex 0.5.6 (git+https://github.com/chugach-foundation/serum-dex.git?rev=2fab8b9)",
- "sha2 0.9.9",
  "solana-sdk",
 ]
 
