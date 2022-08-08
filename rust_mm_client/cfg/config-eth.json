@@ -1,5 +1,5 @@
 {
-    "wallet": "C:\\Users\\warde\\OneDrive\\Documentos\\GitHub\\cypher\\market-making\\rust_mm_client\\mm_eth",
+    "wallet": "/Users/hoak/.config/solana/mm_eth.json",
     "group": "devnet2",
     "inventoryManagerConfig": {
         "initialCapital": 10000,

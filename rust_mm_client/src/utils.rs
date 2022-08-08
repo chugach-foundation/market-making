@@ -51,9 +51,7 @@ pub async fn init_cypher_user(
     rpc: &Arc<RpcClient>,
 ) -> Result<(), ClientError> {
     let (address, bump) = derive_cypher_user_address(group_address, &owner.pubkey());
-
     let ix = init_cypher_user_ix(group_address, &address, &owner.pubkey(), bump);
-
     let mut builder = FastTxnBuilder::new();
     builder.add(ix);
     let hash = rpc.get_latest_blockhash().await?;
