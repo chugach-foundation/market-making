@@ -16,19 +16,12 @@ tokio = "1.14.1"
 futures = "0.3.21"
 num_enum = "0.5.0"
 static_assertions = "1.1.0"
-serum_dex = { git = "https://github.com/chugach-foundation/serum-dex.git", rev="2fab8b9", features = ["fuzz", "no-entrypoint" ] }
 bytemuck = { version = "1.4.0" }
 bitflags = "1.3"
 safe-transmute = "0.11.2"
 arrayref = "0.3.6"
 base64 = "0.13.0"
-cypher = { path = "../../cypher-protocol/programs/cypher", features = ["no-entrypoint", "mainnet-beta" ] }
-cypher-tester = { path="../../cypher-protocol/tester" }
-jet-proto-math = { git = "https://github.com/chugach-foundation/jet-program-libraries.git", rev="ac8909b" }
-jet-proto-proc-macros = { git = "https://github.com/chugach-foundation/jet-program-libraries.git", rev="ac8909b" }
-anchor-lang = { git = "https://github.com/chugach-foundation/anchor.git", rev="e14de2e" }
-anchor-client = { git = "https://github.com/chugach-foundation/anchor.git", rev="e14de2e" }
-spl-token = { version = "3.1.1", features = ["no-entrypoint"] }
+spl-associated-token-account = "1.0.5"
 fraction = "0.10.0"  
 spl-math = "0.1.0"
 serde = "1.0.137"
@@ -36,3 +29,11 @@ serde_json = "1.0.81"
 clap = { version = "3.0", features = ["derive"] }
 log = "0.4.17"
 chrono = "0.4.19"
+cypher = { git = "https://github.com/chugach-foundation/cypher-cpi.git", rev="edcec58", features = [ "client" ] }
+faucet = { git = "https://github.com/chugach-foundation/cypher-cpi.git", rev="edcec58", features = [ "client" ] }
+serum_dex = { git = "https://github.com/chugach-foundation/serum-dex.git", rev="2fab8b9", features = ["fuzz", "no-entrypoint" ] }
+jet-proto-math = { git = "https://github.com/chugach-foundation/jet-program-libraries.git", rev="ac8909b" }
+jet-proto-proc-macros = { git = "https://github.com/chugach-foundation/jet-program-libraries.git", rev="ac8909b" }
+anchor-lang = { git = "https://github.com/chugach-foundation/anchor.git", rev="9131d9f" }
+anchor-spl = { git = "https://github.com/chugach-foundation/anchor.git", rev="9131d9f", features = ["token", "associated_token", "dex"] }
+anchor-client = { git = "https://github.com/chugach-foundation/anchor.git", rev="9131d9f" }

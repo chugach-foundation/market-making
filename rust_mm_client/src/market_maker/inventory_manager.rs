@@ -1,9 +1,11 @@
-use crate::config::MarketMakerConfig;
-use cypher::states::{CypherGroup, CypherToken, CypherUser};
-use jet_proto_math::Number;
-use log::{info, warn};
-use serde::{Deserialize, Serialize};
-use std::sync::Arc;
+use {
+    crate::config::MarketMakerConfig,
+    cypher::{CypherGroup, CypherToken, CypherUser},
+    jet_proto_math::Number,
+    log::info,
+    serde::{Deserialize, Serialize},
+    std::sync::Arc,
+};
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -92,33 +94,13 @@ impl InventoryManager {
         cypher_group: &CypherGroup,
         cypher_token: &CypherToken,
     ) -> i64 {
-        let c_asset = cypher_user.get_c_asset(self.market_idx).unwrap();
         let user_pos = cypher_user.get_position(self.market_idx).unwrap();
-
-        info!(
-            "[INVMGR-{}] Account minted: {}. Account collateral: {}",
-            self.config.market.name, c_asset.debt_shares, c_asset.collateral
-        );
 
         info!(
             "[INVMGR-{}] Base Borrows: {}. Base Deposits: {}",
             self.config.market.name,
             user_pos.base_borrows(),
             user_pos.base_deposits(),
-        );
-
-        info!(
-            "[INVMGR-{}] Native Borrows: {}. Native Deposits: {}",
-            self.config.market.name,
-            user_pos.native_borrows(cypher_token),
-            user_pos.native_deposits(cypher_token),
-        );
-
-        info!(
-            "[INVMGR-{}] Total Borrows: {}. Total Deposits: {}",
-            self.config.market.name,
-            user_pos.total_borrows(cypher_token),
-            user_pos.total_deposits(cypher_token),
         );
 
         let long_pos = user_pos.total_deposits(cypher_token).as_u64(0);
@@ -128,18 +110,18 @@ impl InventoryManager {
 
         info!(
             "[INVMGR-{}] Open Orders Coin Free: {}. Open Orders Coin Total: {}.",
-            self.config.market.name, c_asset.oo_info.coin_free, c_asset.oo_info.coin_total,
+            self.config.market.name, user_pos.oo_info.coin_free, user_pos.oo_info.coin_total,
         );
 
         info!(
             "[INVMGR-{}] Open Orders Price Coin Free: {}. Open Orders Price Coin Total: {}.",
-            self.config.market.name, c_asset.oo_info.pc_free, c_asset.oo_info.pc_total,
+            self.config.market.name, user_pos.oo_info.pc_free, user_pos.oo_info.pc_total,
         );
 
         let div: Number = 10_u64.checked_pow(6).unwrap().into();
-        let assets_val = cypher_user.get_assets_value(cypher_group).unwrap();
+        let assets_val = cypher_user.get_assets_value(cypher_group);
         let assets_val_ui = assets_val / div;
-        let liabs_val = cypher_user.get_liabs_value(cypher_group).unwrap();
+        let liabs_val = cypher_user.get_liabilities_value(cypher_group);
         let liabs_val_ui = liabs_val / div;
 
         info!(

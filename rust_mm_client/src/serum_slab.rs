@@ -1,13 +1,14 @@
-#![allow(dead_code)]
-use arrayref::array_refs;
-use bytemuck::{cast_mut, cast_ref, cast_slice, Pod, Zeroable};
-
-use num_enum::{IntoPrimitive, TryFromPrimitive};
-use static_assertions::const_assert_eq;
-use std::{
-    convert::TryFrom,
-    mem::{align_of, size_of},
-    num::NonZeroU64,
+#![allow(dead_code, clippy::upper_case_acronyms)]
+use {
+    arrayref::array_refs,
+    bytemuck::{cast_mut, cast_ref, cast_slice, Pod, Zeroable},
+    num_enum::{IntoPrimitive, TryFromPrimitive},
+    static_assertions::const_assert_eq,
+    std::{
+        convert::TryFrom,
+        mem::{align_of, size_of},
+        num::NonZeroU64,
+    },
 };
 
 #[derive(Copy, Clone, IntoPrimitive, TryFromPrimitive, Debug)]

@@ -12,35 +12,35 @@
     "groups": [
         {
             "cluster": "devnet",
-            "name": "devnet1",
+            "name": "devnet2",
             "quoteSymbol": "USDC",
-            "address": "7m6yTQCLDnV6gqXVt44K2zHs9nczt82SmX4gy5rtfKEP",
-            "programId": "M9y2jRHDvuULE2o8d7wxfx6QBbMNGdyZ1CzAjmwgXpW",
+            "address": "B9v8Nbd2X9UJmVF4ZSng1Nj6wQ9Q86LfEFUbWUw7E7XU",
+            "programId": "8Z8nDAa98hgdYCS9SyAyAesxE3ZhAq8Qo1E8v2V8VU56",
             "serumProgramId": "",
             "tokens": [
                 {
-                    "symbol": "BTCETH",
-                    "mint": "4cs9XrJmawKuLnW1nuF7AEfiFGpfbGxmqbopyyUxn5Va",
-                    "decimals": 3,
+                    "symbol": "SOLETH",
+                    "mint": "GpMKPYrFWrVYTKPmiMCP5bQe1QnEjp44hg3jgdfy9eV7",
+                    "decimals": 0,
                     "tokenIndex": 0
                 },
                 {
-                    "symbol": "SOL&P",
-                    "mint": "DB1KeyoVEUmyybCMuuQ9TgzEQrYeuRG1UzQ2c9Rruw6b",
-                    "decimals": 1,
+                    "symbol": "BTCETH",
+                    "mint": "8n4GTHrWge95zXqsGxzMZgBE4YPhmcWPKUJkdxv5CG3L",
+                    "decimals": 0,
                     "tokenIndex": 1
                 },
                 {
-                    "symbol": "LIQTEST",
-                    "mint": "H4GHmyg98AP42fQHrCP7UQAJQHk4fcNCb8FRDmEt4ZyM",
-                    "decimals": 0,
-                    "tokenIndex": 2
+                    "symbol": "SOL",
+                    "mint": "GpdWGESkQRoYUYMztMs8evmWXeHZGoWdumSj69y6H9mn",
+                    "decimals": 3,
+                    "tokenIndex": 4
                 },
                 {
-                    "symbol": "SOLETH",
-                    "mint": "27EkpsHsrLaE3ZPg4FiFoba67XB5DMb1YvhXa2bHewtr",
-                    "decimals": 0,
-                    "tokenIndex": 3
+                    "symbol": "ETH",
+                    "mint": "7j92XnANkf6mrXUDYGmQHDwHprkDzpKcR4f6mLXxNXff",
+                    "decimals": 4,
+                    "tokenIndex": 5
                 },
                 {
                     "symbol": "USDC",
@@ -59,57 +59,11 @@
                     "address": "2ciUuGZiee5macAMeQ7bHGTJtwcYTgnt6jdmQnnKZrfu"
                 },
                 {
-                    "symbol": "BTC",
-                    "address": "3m1y5h2uv7EQL3KaJZehvAJa4yDNvgc5yAdL9KPMKwvk"
+                    "symbol": "USDC",
+                    "address": "6NpdXrQEpmDZ3jZKmM2rhdmkd3H6QAk23j2x8bkXcHKA"
                 }
             ],
             "markets": [
-                {
-                    "name": "BTC/ETH",
-                    "baseSymbol": "BTCETH",
-                    "quoteSymbol": "USDC",
-                    "marketType": "Pair",
-                    "pairBaseSymbol": "BTC",
-                    "pairQuoteSymbol": "ETH",
-                    "address": "Favt9SSgdAG5EHSg2MzqjaKkqe1sFeEiVfY2bA18uwWD",
-                    "baseDecimals": 3,
-                    "quoteDecimals": 6,
-                    "marketIndex": 0,
-                    "bids": "GesT5HkFTfX1Pm7QDRGr9vP4NArirokkcUYFJccdC3qQ",
-                    "asks": "GhkvpDTCuHj4DBY4CKSwuWbar1rJxbFoEzw42JZ29qRM",
-                    "eventQueue": "3or4bpmd9ho3nTysbgaYq6roHD8yjRypgZtWCYM66v9y"
-                },
-                {
-                    "name": "SOL&P",
-                    "baseSymbol": "SOL&P",
-                    "quoteSymbol": "USDC",
-                    "marketType": "Index",
-                    "pairBaseSymbol": "",
-                    "pairQuoteSymbol": "",
-                    "address": "BADjwTsX2k31krYd5Qt5Fgkw9SNMKCBmJ1pX6KRhjkYP",
-                    "baseDecimals": 1,
-                    "quoteDecimals": 6,
-                    "marketIndex": 1,
-                    "bids": "CMVnqTP2Zk6DAVxKrsBxhULr571NR9kGuFsUathxxtZm",
-                    "asks": "7nMWc9HZRunYruWhpc3yB9QcGCs92w9qadcLTbfCL52H",
-                    "eventQueue": "A4jYzbC7pwP9z84Li4yNTb7R3GyCBR39kNEKUJwWqx7S"
-                },
-                {
-                    "name": "LIQTEST",
-                    "baseSymbol": "LIQTEST",
-                    "quoteSymbol": "USDC",
-                    "marketType": "Index",
-                    "pairBaseSymbol": "",
-                    "pairQuoteSymbol": "",
-                    "address": "7FrSqQSz5wZm9BJb43DT2p335emZdA9gigfmUa51L1dv",
-                    "baseDecimals": 0,
-                    "quoteDecimals": 6,
-                    "marketIndex": 2,
-                    "bids": "DZpcKUs17sSP8jsqKcHZDtEJB38fc4AvAXXamQ99CuVA",
-                    "asks": "ADwFjCFQ72sRNhnuXn69kwwjNd3BU7pvEaAEs96GwJdC",
-                    "eventQueue": "J3JNCTrpTmQTmikXpPeQFTqwYrZUZhU8kbwKoYz5QJZH"
-
-                },
                 {
                     "name": "SOL/ETH",
                     "baseSymbol": "SOLETH",
@@ -117,13 +71,58 @@
                     "marketType": "Pair",
                     "pairBaseSymbol": "SOL",
                     "pairQuoteSymbol": "ETH",
-                    "address": "DproNbtPLPC7Gk8MtN7GNY6bCXziJU44gbZXx9JZ9cy9",
+                    "address": "Cgwx6FvJe5UVDKobaNLBUSn6ySQJEKJoWF3cRWPQsrwM",
                     "baseDecimals": 0,
                     "quoteDecimals": 6,
-                    "marketIndex": 3,
-                    "bids": "2jpmsEfADH8doZU8nTVexEVPbqdZuFTd7cXsa32LNUVS",
-                    "asks": "4ZR44TiNwYxXEiX57KVZ3FgCFGfekh7KeV5rLMFZ9p5v",
-                    "eventQueue": "GG22M3GMvTGAq5omRSEYdGvq6h7TURfp3QHUpLuKwzhF"
+                    "marketIndex": 0,
+                    "bids": "7SnbmCWyNx6GLqEXEsoXdogcRoZe8ikwensR5zWXaout",
+                    "asks": "HqExi2VuJaBgXH3MJdvuvRZX3c3N5yx3hHXnY1YgB44c",
+                    "eventQueue": "EEa4MLKmKJtorfRoGJ8AkxeazqHGho2mFm18fXbdKX2H"
+                },
+                {
+                    "name": "BTC/ETH",
+                    "baseSymbol": "BTCETH",
+                    "quoteSymbol": "USDC",
+                    "marketType": "Pair",
+                    "pairBaseSymbol": "BTC",
+                    "pairQuoteSymbol": "ETH",
+                    "address": "CQ35hwCtrhhTdv1161wUtd7pzVcLQnFfd7tUeKGTP6c1",
+                    "baseDecimals": 0,
+                    "quoteDecimals": 6,
+                    "marketIndex": 1,
+                    "bids": "DhwveCa4c1AbVyHHcX5WaZTUWkQwV3X45N7CVhSBD6Vp",
+                    "asks": "7Tcn5pBZ9TkME9pKYbyTkEqf2HcQoWwBaksCBR34Qs3Z",
+                    "eventQueue": "DmTvZz51TAfeJnDHA9hkskpQYbKHm5bwP3UnKVHnqVtA"
+                },
+                {
+                    "name": "SOL",
+                    "baseSymbol": "SOL",
+                    "quoteSymbol": "USDC",
+                    "marketType": "Pair",
+                    "pairBaseSymbol": "SOL",
+                    "pairQuoteSymbol": "USDC",
+                    "address": "zEYhHVmKs5yHKZ4yHUsrunSK1bS9QxveTRQJAAHwLjU",
+                    "baseDecimals": 3,
+                    "quoteDecimals": 6,
+                    "marketIndex": 4,
+                    "bids": "A7v7b7inMhhrgoHUJveNMQZXvmo4aeSps2YjLtEKfQdK",
+                    "asks": "DwqBN81yqCzLR935v6syvxZPoeH6A91WhpcaQffk4RZA",
+                    "eventQueue": "2rqfYuy9qyw5RMssHysvWNnowEBWZuaPASGbRHQNGDj2"
+                },
+                {
+                    "name": "ETH",
+                    "baseSymbol": "ETH",
+                    "quoteSymbol": "USDC",
+                    "marketType": "Pair",
+                    "pairBaseSymbol": "ETH",
+                    "pairQuoteSymbol": "USDC",
+                    "address": "CAWDMuZTwDHkvGUKD4NwvD5wK8uetu66f81Rwp23HdZq",
+                    "baseDecimals": 4,
+                    "quoteDecimals": 6,
+                    "marketIndex": 5,
+                    "bids": "HS5fYSYuQF2HccPYupocWY1CsZRjN7ojo1R5DfbHAouA",
+                    "asks": "4NaDdz2pQk4s3dzjiESBvsjTCJPkPRQbPbkcyaKiYBuz",
+                    "eventQueue": "3SNcDUer66oBTz3cvWsjaKTWmN9kgGDTczCqBco851oX"
                 }
             ]
         },
