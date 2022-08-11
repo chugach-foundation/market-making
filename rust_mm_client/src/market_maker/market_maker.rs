@@ -294,6 +294,7 @@ impl MarketMaker {
 
         self.inventory_manager = Arc::new(InventoryManager::new(
             Arc::clone(&self.config),
+            market_config.base_decimals,
             market_config.market_index as usize,
             self.config.inventory_manager_config.max_quote,
             self.config.inventory_manager_config.shape_num,

@@ -19,6 +19,7 @@ pub struct InventoryManagerConfig {
 
 pub struct InventoryManager {
     config: Arc<MarketMakerConfig>,
+    decimals: u8,
     market_idx: usize,
     max_quote: i64,
     shape_num: u32,
@@ -29,8 +30,8 @@ pub struct InventoryManager {
 #[derive(Debug, Default)]
 pub struct QuoteVolumes {
     pub delta: i64,
-    pub bid_size: i64,
-    pub ask_size: i64,
+    pub bid_size: i128,
+    pub ask_size: i128,
 }
 
 // Number we use here is arbitrary, shape mul can do conversion to any base..
@@ -41,6 +42,7 @@ impl InventoryManager {
     pub fn default() -> Self {
         Self {
             config: Arc::new(MarketMakerConfig::default()),
+            decimals: u8::default(),
             market_idx: usize::default(),
             max_quote: i64::default(),
             shape_num: u32::default(),
@@ -51,6 +53,7 @@ impl InventoryManager {
 
     pub fn new(
         config: Arc<MarketMakerConfig>,
+        decimals: u8,
         market_index: usize,
         max_quote: i64,
         shape_num: u32,
@@ -59,6 +62,7 @@ impl InventoryManager {
     ) -> Self {
         Self {
             config,
+            decimals,
             market_idx: market_index,
             max_quote,
             shape_num,
@@ -77,9 +81,9 @@ impl InventoryManager {
 
         let adjusted_vol = self.adj_quote_size(current_delta.abs().try_into().unwrap());
         let (bid_size, ask_size) = if current_delta < 0 {
-            (self.max_quote, adjusted_vol)
+            (self.max_quote as i128, adjusted_vol)
         } else {
-            (adjusted_vol, self.max_quote)
+            (adjusted_vol, self.max_quote as i128)
         };
         QuoteVolumes {
             delta: current_delta,
@@ -102,9 +106,11 @@ impl InventoryManager {
             user_pos.base_borrows(),
             user_pos.base_deposits(),
         );
+        let div: Number = 10_u64.checked_pow(6).unwrap().into();
+        let c_asset_divisor = 10_u64.checked_pow(self.decimals as u32).unwrap();
 
-        let long_pos = user_pos.total_deposits(cypher_token).as_u64(0);
-        let short_pos = user_pos.total_borrows(cypher_token).as_u64(0);
+        let long_pos = user_pos.total_deposits(cypher_token).as_u64(0) as i64 / c_asset_divisor as i64;
+        let short_pos = user_pos.total_borrows(cypher_token).as_u64(0) as i64/ c_asset_divisor as i64;
 
         let delta = long_pos as i64 - short_pos as i64;
 
@@ -118,7 +124,6 @@ impl InventoryManager {
             self.config.market.name, user_pos.oo_info.pc_free, user_pos.oo_info.pc_total,
         );
 
-        let div: Number = 10_u64.checked_pow(6).unwrap().into();
         let assets_val = cypher_user.get_assets_value(cypher_group);
         let assets_val_ui = assets_val / div;
         let liabs_val = cypher_user.get_liabilities_value(cypher_group);
@@ -132,11 +137,20 @@ impl InventoryManager {
         delta
     }
 
-    fn adj_quote_size(&self, abs_delta: u32) -> i64 {
+    fn adj_quote_size(&self, abs_delta: u32) -> i128 {
+        info!(
+            "INVMGR delta {} shape num {}", abs_delta, self.shape_num  
+        );
         let shaped_delta = self.shape_num * abs_delta;
+        info!(
+            "INVMGR shaped delta {}", shaped_delta
+        );
         let divided_shaped_delta = shaped_delta / self.shape_denom;
-        let divisor = EXP_BASE.pow(divided_shaped_delta);
-        self.max_quote / divisor
+        info!(
+            "INVMGR divided_shaped_delta {}", divided_shaped_delta
+        );
+        let divisor: i128 = EXP_BASE.pow(divided_shaped_delta).into();
+        self.max_quote as i128 / divisor
     }
 
     pub fn get_spread(&self, oracle_price: u64) -> (u64, u64) {
