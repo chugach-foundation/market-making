@@ -16,7 +16,7 @@ tokio = "1.14.1"
 futures = "0.3.21"
 num_enum = "0.5.0"
 static_assertions = "1.1.0"
-bytemuck = { version = "1.4.0" }
+bytemuck = "1.4.0"
 bitflags = "1.3"
 safe-transmute = "0.11.2"
 arrayref = "0.3.6"
@@ -29,11 +29,11 @@ serde_json = "1.0.81"
 clap = { version = "3.0", features = ["derive"] }
 log = "0.4.17"
 chrono = "0.4.19"
-cypher = { git = "https://github.com/chugach-foundation/cypher-cpi.git", rev="657f5d3", features = [ "client" ] }
-faucet = { git = "https://github.com/chugach-foundation/cypher-cpi.git", rev="657f5d3", features = [ "client" ] }
+anchor-lang = ">0.24.2"
+anchor-spl = { version = ">0.24.2", features = ["token", "associated_token", "dex"] }
+anchor-client = ">0.24.2"
+cypher = { git = "https://github.com/chugach-foundation/cypher-cpi.git", features = [ "client" ] }
+faucet = { git = "https://github.com/chugach-foundation/cypher-cpi.git" }
 serum_dex = { git = "https://github.com/chugach-foundation/serum-dex.git", rev="2fab8b9", features = ["fuzz", "no-entrypoint" ] }
 jet-proto-math = { git = "https://github.com/chugach-foundation/jet-program-libraries.git", rev="ac8909b" }
 jet-proto-proc-macros = { git = "https://github.com/chugach-foundation/jet-program-libraries.git", rev="ac8909b" }
-anchor-lang = { git = "https://github.com/chugach-foundation/anchor.git", rev="9131d9f" }
-anchor-spl = { git = "https://github.com/chugach-foundation/anchor.git", rev="9131d9f", features = ["token", "associated_token", "dex"] }
-anchor-client = { git = "https://github.com/chugach-foundation/anchor.git", rev="9131d9f" }
