@@ -1,16 +1,17 @@
-use crate::{
-    accounts_cache::AccountsCache,
-    serum_slab::{OrderBookOrder, Slab},
-    MarketMakerError,
-};
-use arrayref::array_refs;
-use log::{info, warn};
-use solana_sdk::pubkey::Pubkey;
-use std::sync::Arc;
-use tokio::sync::RwLock;
-use tokio::sync::{
-    broadcast::{channel, Receiver, Sender},
-    Mutex,
+use {
+    crate::{
+        accounts_cache::AccountsCache,
+        serum_slab::{OrderBookOrder, Slab},
+        MarketMakerError,
+    },
+    arrayref::array_refs,
+    log::{info, warn},
+    solana_sdk::pubkey::Pubkey,
+    std::sync::Arc,
+    tokio::sync::{
+        broadcast::{channel, Receiver, Sender},
+        Mutex, RwLock,
+    },
 };
 
 #[derive(Default)]

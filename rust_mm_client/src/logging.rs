@@ -1,5 +1,7 @@
-use chrono::Local;
-use log::{Level, LevelFilter, Metadata, Record, SetLoggerError};
+use {
+    chrono::Local,
+    log::{Level, LevelFilter, Metadata, Record, SetLoggerError},
+};
 
 static LOGGER: Logger = Logger;
 

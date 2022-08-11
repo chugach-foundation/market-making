@@ -1,14 +1,14 @@
 {
-    "wallet": "/Users/hoak/.config/solana/mm_btceth.json",
+    "wallet": "/Users/hoak/.config/solana/mm_sol.json",
     "group": "devnet2",
     "inventoryManagerConfig": {
-        "initialCapital": 1000,
-        "maxQuote": 2500,
+        "initialCapital": 10000,
+        "maxQuote": 100000,
         "shapeNum": 1,
         "shapeDenom": 100000,
         "spread": 50
     },
     "market": {
-        "name": "BTC/ETH"
+        "name": "SOL"
     }
 }

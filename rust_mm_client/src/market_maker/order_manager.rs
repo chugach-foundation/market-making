@@ -1,36 +1,37 @@
-use std::{num::NonZeroU64, sync::Arc};
-
-use cypher::states::{CypherGroup, CypherMarket, CypherToken};
-use log::{info, warn};
-use serum_dex::{
-    instruction::{CancelOrderInstructionV2, NewOrderInstructionV3, SelfTradeBehavior},
-    matching::{OrderType, Side},
-    state::{MarketStateV2, OpenOrders},
+use {
+    super::QuoteVolumes,
+    crate::{
+        fast_tx_builder::FastTxnBuilder,
+        market_maker::{get_cancel_order_ix, get_new_order_ix},
+        providers::OrderBook,
+        serum_slab::OrderBookOrder,
+        services::ChainMetaService,
+        MarketMakerError,
+    },
+    cypher::{
+        utils::{derive_cypher_user_address, derive_open_orders_address},
+        CypherGroup, CypherMarket, CypherToken,
+    },
+    log::{info, warn},
+    serum_dex::{
+        instruction::{CancelOrderInstructionV2, NewOrderInstructionV3, SelfTradeBehavior},
+        matching::{OrderType, Side},
+        state::{MarketStateV2, OpenOrders},
+    },
+    solana_client::{client_error::ClientError, nonblocking::rpc_client::RpcClient},
+    solana_sdk::{
+        hash::Hash,
+        instruction::Instruction,
+        signature::{Keypair, Signature},
+        signer::Signer,
+        transaction::Transaction,
+    },
+    std::{num::NonZeroU64, sync::Arc},
+    tokio::sync::{
+        broadcast::{channel, Receiver},
+        Mutex, RwLock,
+    },
 };
-use solana_client::{client_error::ClientError, nonblocking::rpc_client::RpcClient};
-use solana_sdk::{
-    hash::Hash,
-    instruction::Instruction,
-    signature::{Keypair, Signature},
-    signer::Signer,
-    transaction::Transaction,
-};
-use tokio::sync::{
-    broadcast::{channel, Receiver},
-    Mutex, RwLock,
-};
-
-use crate::{
-    fast_tx_builder::FastTxnBuilder,
-    market_maker::{gen_client_order_id, get_cancel_order_ix, get_new_order_ix},
-    providers::OrderBook,
-    serum_slab::OrderBookOrder,
-    services::ChainMetaService,
-    utils::{derive_cypher_user_address, derive_open_orders_address},
-    MarketMakerError,
-};
-
-use super::QuoteVolumes;
 
 pub struct ManagedOrder {
     pub order_id: u128,
@@ -147,7 +148,9 @@ impl OrderManager {
         info!("[ORDERMGR-{}] Received order book update.", self.symbol);
         let bids = ob.bids.read().await;
         let asks = ob.asks.read().await;
-        if asks.is_empty() && !bids.is_empty() {
+        if asks.is_empty() && bids.is_empty() {
+            info!("ORDERMGR-{}] Latest ob for market is empty!", self.symbol)
+        } else if asks.is_empty() && !bids.is_empty() {
             info!(
                 "[ORDERMGR-{}] Latest ob for market: {} bids / best bid {}@{} - 0 asks ",
                 self.symbol,
@@ -405,11 +408,9 @@ impl OrderManager {
         if quote_vols.ask_size > 0 {
             let max_native_pc_qty_ask = quote_vols.ask_size as u64 * best_ask;
             let client_order_id = *self.client_order_id.read().await;
-            let gen_client_order_id =
-                gen_client_order_id(client_order_id as u32, false, OrderType::PostOnly);
             info!(
                 "[ORDERMGR-{}] Submitting new ask at {} for {} units at max qty pc {} with coid: {}",
-                self.symbol, best_ask, quote_vols.ask_size, max_native_pc_qty_ask, gen_client_order_id
+                self.symbol, best_ask, quote_vols.ask_size, max_native_pc_qty_ask, client_order_id
             );
 
             ixs.push(get_new_order_ix(
@@ -434,17 +435,15 @@ impl OrderManager {
                 },
             ));
             *self.client_order_id.write().await += 1;
-            new_orders.push(gen_client_order_id);
+            new_orders.push(client_order_id);
         }
 
         if quote_vols.bid_size > 0 {
             let max_native_pc_qty_bid = quote_vols.bid_size as u64 * best_bid;
             let client_order_id = *self.client_order_id.read().await;
-            let gen_client_order_id =
-                gen_client_order_id(client_order_id as u32, false, OrderType::PostOnly);
             info!(
                 "[ORDERMGR-{}] Submitting new bid at {} for {} units at max pc qty {} with coid: {}",
-                self.symbol, best_bid, quote_vols.bid_size, max_native_pc_qty_bid, gen_client_order_id
+                self.symbol, best_bid, quote_vols.bid_size, max_native_pc_qty_bid, client_order_id
             );
 
             ixs.push(get_new_order_ix(
@@ -469,7 +468,7 @@ impl OrderManager {
                 },
             ));
             *self.client_order_id.write().await += 1;
-            new_orders.push(gen_client_order_id);
+            new_orders.push(client_order_id);
         }
 
         drop(new_orders);

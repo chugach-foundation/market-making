@@ -9,31 +9,35 @@ mod serum_slab;
 mod services;
 mod utils;
 
-use clap::Parser;
-use config::*;
-use cypher::{
-    constants::QUOTE_TOKEN_IDX,
-    states::{CypherGroup, CypherUser},
-};
-use cypher_tester::parse_dex_account;
-use fast_tx_builder::FastTxnBuilder;
-use jet_proto_math::Number;
-use log::{info, warn};
-use logging::init_logger;
-use serum_dex::state::OpenOrders;
-use solana_client::nonblocking::rpc_client::RpcClient;
-use solana_sdk::{
-    commitment_config::CommitmentConfig, pubkey::Pubkey, signature::Keypair, signer::Signer,
-};
-use std::{fs::File, io::Read, str::FromStr, sync::Arc};
-use tokio::sync::broadcast::channel;
-use utils::{
-    derive_quote_token_address, get_init_open_orders_ix, get_zero_copy_account, init_cypher_user,
-};
-
-use crate::{
-    market_maker::MarketMaker,
-    utils::{derive_cypher_user_address, derive_open_orders_address, get_deposit_collateral_ix},
+use {
+    crate::{market_maker::MarketMaker, utils::get_deposit_collateral_ix},
+    clap::Parser,
+    config::*,
+    cypher::{
+        constants::QUOTE_TOKEN_IDX,
+        quote_mint,
+        utils::{
+            derive_cypher_user_address, derive_open_orders_address, get_zero_copy_account,
+            parse_dex_account,
+        },
+        CypherGroup, CypherUser,
+    },
+    fast_tx_builder::FastTxnBuilder,
+    faucet::request_airdrop_ix,
+    jet_proto_math::Number,
+    log::{info, warn},
+    logging::init_logger,
+    serum_dex::state::OpenOrders,
+    solana_client::nonblocking::rpc_client::RpcClient,
+    solana_sdk::{
+        commitment_config::CommitmentConfig, pubkey::Pubkey, signature::Keypair, signer::Signer,
+    },
+    spl_associated_token_account::instruction::create_associated_token_account,
+    std::{fs::File, io::Read, str::FromStr, sync::Arc},
+    tokio::sync::broadcast::channel,
+    utils::{
+        derive_quote_token_address, get_init_open_orders_ix, get_token_account, init_cypher_user,
+    },
 };
 
 // rework this, maybe ask user for input as well
@@ -122,21 +126,20 @@ async fn main() -> Result<(), MarketMakerError> {
     let mm_config = Arc::new(load_mm_config(config_path).unwrap());
     let cypher_config = Arc::new(load_cypher_config(CYPHER_CONFIG_PATH).unwrap());
 
-    let cluster_config = cypher_config.get_config_for_cluster(mm_config.cluster.as_str());
+    let cluster_config = cypher_config.get_config_for_cluster(mm_config.group.as_str());
 
     let keypair = load_keypair(mm_config.wallet.as_str()).unwrap();
     let pubkey = keypair.pubkey();
     info!("Loaded keypair with pubkey: {}", pubkey.to_string());
 
-    let cypher_group_config =
-        Arc::new(cypher_config.get_group(mm_config.cluster.as_str()).unwrap());
+    let cypher_group_config = Arc::new(cypher_config.get_group(mm_config.group.as_str()).unwrap());
 
     let cypher_group_key = Pubkey::from_str(cypher_group_config.address.as_str()).unwrap();
 
     // initialize rpc client with cluster and cluster url provided in config
     info!(
         "Initializing rpc client for cluster-{} with url: {}",
-        mm_config.cluster, cluster_config.rpc_url
+        mm_config.group, cluster_config.rpc_url
     );
     let rpc_client = Arc::new(RpcClient::new_with_commitment(
         cluster_config.rpc_url.to_string(),
@@ -180,7 +183,7 @@ async fn main() -> Result<(), MarketMakerError> {
     };
 
     let market_config = cypher_group_config
-        .get_market(mm_config.cluster.as_str(), mm_config.market.name.as_str())
+        .get_market(mm_config.market.name.as_str())
         .unwrap();
 
     let market_pubkey = Pubkey::from_str(market_config.address.as_str()).unwrap();
@@ -327,11 +330,10 @@ async fn _get_or_init_open_orders(
     }
 }
 
-#[allow(clippy::borrowed_box)]
 async fn _get_or_init_cypher_user(
     owner: &Keypair,
     cypher_group_pubkey: &Pubkey,
-    cypher_group: &Box<CypherGroup>,
+    cypher_group: &CypherGroup,
     cypher_user_pubkey: &Pubkey,
     rpc_client: Arc<RpcClient>,
     config: &MarketMakerConfig,
@@ -383,17 +385,16 @@ async fn _get_or_init_cypher_user(
     }
 }
 
-#[allow(clippy::borrowed_box)]
 async fn _check_cypher_balance(
     owner: &Keypair,
     cypher_user_pubkey: &Pubkey,
-    cypher_user: &Box<CypherUser>,
-    cypher_group: &Box<CypherGroup>,
+    cypher_user: &CypherUser,
+    cypher_group: &CypherGroup,
     config: &MarketMakerConfig,
     rpc_client: Arc<RpcClient>,
 ) -> Result<(), MarketMakerError> {
     let position = cypher_user.get_position(QUOTE_TOKEN_IDX).unwrap();
-    let quote_token = cypher_group.get_cypher_token(QUOTE_TOKEN_IDX);
+    let quote_token = cypher_group.get_cypher_token(QUOTE_TOKEN_IDX).unwrap();
 
     let initial_capital_native: Number = (config.inventory_manager_config.initial_capital
         * 10_u64.checked_pow(quote_token.decimals().into()).unwrap())
@@ -415,26 +416,94 @@ async fn _check_cypher_balance(
 
     let amount_rem = initial_capital_native - total_quote_deposits;
 
-    info!(
-        "Depositing quote token (native): {} - {}",
-        amount_rem,
-        amount_rem.as_u64(0)
-    );
+    info!("Depositing quote token (native): {}.", amount_rem);
 
+    if config.group.contains("devnet") {
+        match request_airdrop(owner, Arc::clone(&rpc_client)).await {
+            Ok(_) => (),
+            Err(e) => {
+                warn!("There was an error requesting airdrop: {:?}", e);
+                return Err(MarketMakerError::ErrorDepositing);
+            }
+        }
+    }
+
+    deposit_quote_token(
+        owner,
+        cypher_user_pubkey,
+        cypher_group,
+        rpc_client,
+        amount_rem,
+    )
+    .await
+}
+
+async fn request_airdrop(
+    owner: &Keypair,
+    rpc_client: Arc<RpcClient>,
+) -> Result<(), MarketMakerError> {
+    let token_account = derive_quote_token_address(owner.pubkey());
+    let airdrop_ix = request_airdrop_ix(&token_account, 10_000_000_000);
+
+    let mut builder = FastTxnBuilder::new();
+
+    let token_account_res = get_token_account(Arc::clone(&rpc_client), &token_account).await;
+    match token_account_res {
+        Ok(_) => (),
+        Err(_) => {
+            info!(
+                "Quote token account does not exist, creating account with key: {} for mint {}.",
+                token_account,
+                quote_mint::ID
+            );
+            builder.add(create_associated_token_account(
+                &owner.pubkey(),
+                &owner.pubkey(),
+                &quote_mint::ID,
+            ));
+        }
+    }
+    builder.add(airdrop_ix);
+
+    let hash = rpc_client.get_latest_blockhash().await.unwrap();
+    let tx = builder.build(hash, owner, None);
+    let res = rpc_client
+        .send_and_confirm_transaction_with_spinner(&tx)
+        .await;
+    match res {
+        Ok(s) => {
+            info!(
+                "Successfully requested airdrop. Transaction signature: {}",
+                s.to_string()
+            );
+            Ok(())
+        }
+        Err(e) => {
+            warn!("There was an error requesting airdrop: {}", e.to_string());
+            Err(MarketMakerError::ErrorDepositing)
+        }
+    }
+}
+
+async fn deposit_quote_token(
+    owner: &Keypair,
+    cypher_user_pubkey: &Pubkey,
+    cypher_group: &CypherGroup,
+    rpc_client: Arc<RpcClient>,
+    amount: Number,
+) -> Result<(), MarketMakerError> {
     let source_ata = derive_quote_token_address(owner.pubkey());
 
-    let ixs = get_deposit_collateral_ix(
+    let ix = get_deposit_collateral_ix(
         &cypher_group.self_address,
         cypher_user_pubkey,
         &cypher_group.quote_vault(),
         &source_ata,
         &owner.pubkey(),
-        amount_rem.as_u64(0),
+        amount.as_u64(0),
     );
     let mut builder = FastTxnBuilder::new();
-    for ix in ixs {
-        builder.add(ix);
-    }
+    builder.add(ix);
     let hash = rpc_client.get_latest_blockhash().await.unwrap();
     let tx = builder.build(hash, owner, None);
     let res = rpc_client
@@ -526,7 +595,7 @@ async fn _init_open_orders(
     signer: &Keypair,
     rpc_client: Arc<RpcClient>,
 ) -> Result<(), MarketMakerError> {
-    let ixs = get_init_open_orders_ix(
+    let ix = get_init_open_orders_ix(
         cypher_group_pubkey,
         cypher_user_pubkey,
         cypher_market,
@@ -535,15 +604,12 @@ async fn _init_open_orders(
     );
 
     let mut builder = FastTxnBuilder::new();
-    for ix in ixs {
-        builder.add(ix);
-    }
+    builder.add(ix);
     let hash = rpc_client.get_latest_blockhash().await.unwrap();
     let tx = builder.build(hash, signer, None);
     let res = rpc_client
         .send_and_confirm_transaction_with_spinner(&tx)
         .await;
-
     match res {
         Ok(s) => {
             info!(

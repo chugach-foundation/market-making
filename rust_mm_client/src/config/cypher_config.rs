@@ -1,8 +1,8 @@
-use serde::{Deserialize, Serialize};
-use serde_json;
-use std::error::Error;
-use std::fs::File;
-use std::io::BufReader;
+use {
+    serde::{Deserialize, Serialize},
+    serde_json,
+    std::{error::Error, fs::File, io::BufReader},
+};
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -35,7 +35,7 @@ impl CypherConfig {
     }
 
     pub fn get_group(&self, cluster: &str) -> Option<&CypherGroupConfig> {
-        self.groups.iter().find(|&g| g.cluster.as_str() == cluster)
+        self.groups.iter().find(|&g| g.name.as_str() == cluster)
     }
 }
 
@@ -54,27 +54,8 @@ pub struct CypherGroupConfig {
 }
 
 impl CypherGroupConfig {
-    pub fn get_market(&self, cluster: &str, market: &str) -> Option<&CypherMarketConfig> {
+    pub fn get_market(&self, market: &str) -> Option<&CypherMarketConfig> {
         self.markets.iter().find(|&m| m.name.as_str() == market)
-    }
-
-    pub fn get_oracle(&self, cluster: &str, symbol: &str) -> Option<&CypherOracleConfig> {
-        self.oracles.iter().find(|&o| o.symbol == symbol)
-    }
-
-    pub fn get_mint_for_symbol(&self, cluster: &str, symbol: &str) -> Option<&CypherTokenConfig> {
-        self.tokens.iter().find(|&t| t.symbol == symbol)
-    }
-
-    pub fn get_market_index(&self, cluster: &str, market: &str) -> Option<usize> {
-        let market = self.markets.iter().find(|&m| m.name.as_str() == market);
-
-        let market_idx = match market {
-            Some(m) => Some(m.market_index),
-            None => None,
-        };
-
-        market_idx
     }
 }
 
