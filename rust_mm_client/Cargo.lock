@@ -214,7 +214,7 @@ dependencies = [
 [[package]]
 name = "anchor-discriminator"
 version = "0.1.0"
-source = "git+https://github.com/chugach-foundation/cypher-cpi.git?rev=edcec58#edcec585f32baf0bd9b228dcb9b06fabc500baf4"
+source = "git+https://github.com/chugach-foundation/cypher-cpi.git?rev=657f5d3#657f5d3c035b18d1664033289874e8e3fccf82a0"
 dependencies = [
  "sha2 0.9.9",
 ]
@@ -992,7 +992,7 @@ dependencies = [
 [[package]]
 name = "cypher"
 version = "0.1.0"
-source = "git+https://github.com/chugach-foundation/cypher-cpi.git?rev=edcec58#edcec585f32baf0bd9b228dcb9b06fabc500baf4"
+source = "git+https://github.com/chugach-foundation/cypher-cpi.git?rev=657f5d3#657f5d3c035b18d1664033289874e8e3fccf82a0"
 dependencies = [
  "anchor-discriminator",
  "anchor-gen",
@@ -1339,7 +1339,7 @@ dependencies = [
 [[package]]
 name = "faucet"
 version = "0.1.0"
-source = "git+https://github.com/chugach-foundation/cypher-cpi.git?rev=edcec58#edcec585f32baf0bd9b228dcb9b06fabc500baf4"
+source = "git+https://github.com/chugach-foundation/cypher-cpi.git?rev=657f5d3#657f5d3c035b18d1664033289874e8e3fccf82a0"
 dependencies = [
  "anchor-discriminator",
  "anchor-gen",
