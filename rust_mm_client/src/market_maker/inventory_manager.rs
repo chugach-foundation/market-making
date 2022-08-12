@@ -138,17 +138,8 @@ impl InventoryManager {
     }
 
     fn adj_quote_size(&self, abs_delta: u32) -> i128 {
-        info!(
-            "INVMGR delta {} shape num {}", abs_delta, self.shape_num  
-        );
         let shaped_delta = self.shape_num * abs_delta;
-        info!(
-            "INVMGR shaped delta {}", shaped_delta
-        );
         let divided_shaped_delta = shaped_delta / self.shape_denom;
-        info!(
-            "INVMGR divided_shaped_delta {}", divided_shaped_delta
-        );
         let divisor: i128 = EXP_BASE.pow(divided_shaped_delta).into();
         self.max_quote as i128 / divisor
     }
