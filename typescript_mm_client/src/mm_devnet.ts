@@ -21,6 +21,7 @@ import { ASSOCIATED_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@project-serum/anchor/d
 import { Token } from "@solana/spl-token"
 
 const USDC_MINT = new PublicKey("DPhNUKVhnrkdbq37GUgTUBRbZLsvziX1p5e5YUXyjBsb");
+const cluster: Cluster = 'devnet';
 
 export const wait = (delayMS: number) =>
 	new Promise((resolve) => setTimeout(resolve, delayMS));
@@ -38,7 +39,7 @@ async function faucet_spam(ctr: CypherUserController, payer: Keypair, con: Conne
 
 	// @ts-ignore
 	const ix = await ctr.client.testDriver.getMintInstr(ata, tenk);
-	for (let i = 0; i < 37; i++) {
+	for (let i = 0; i < 10; i++) {
 		builder.add(ix);
 	}
 	const { execute } = await builder.build();
@@ -50,9 +51,6 @@ async function faucet_spam(ctr: CypherUserController, payer: Keypair, con: Conne
 
 
 async function marketMaker() {
-	let cluster: Cluster = "devnet";
-	console.log('fuck')
-
 	let traderk = loadPayer(process.env.CMKEY ?? process.env.SECRET_KEY);
 	let groupAddr: PublicKey = new PublicKey("B9v8Nbd2X9UJmVF4ZSng1Nj6wQ9Q86LfEFUbWUw7E7XU");
 
@@ -66,20 +64,21 @@ async function marketMaker() {
 	let cAssetMarket = group.getDexMarket(cAssetMint).address;
 	let programAddress = new PublicKey('DsGUdHQY2EnvWbN5VoSZSyjL4EWnStgaJhFDmJV34GQQ');
 
-	const [newAddr, bump] = await CypherUserController.deriveAddress(tradeclient, groupAddr);
-	// const initUserIx = await makeInitCypherUserIx(tradeclient, groupAddr, newAddr, bump);
-	// const tx = new Transaction();
-	// tx.add(initUserIx);
-	// await tradeclient.anchorProvider.sendAndConfirm(tx, [traderk]);
+	if (!traderctr.user.address) {
+		const [newAddr, bump] = await CypherUserController.deriveAddress(tradeclient, groupAddr);
+		const initUserIx = await makeInitCypherUserIx(tradeclient, groupAddr, newAddr, bump);
+		const tx = new Transaction();
+		tx.add(initUserIx);
+		await tradeclient.anchorProvider.sendAndConfirm(tx, [traderk]);
+	}
 
-	console.log('you')
+
 	const client = await CypherMMClient.load(
 		cAssetMint,
 		"devnet",
 		rpcAddy,
 		group,
 		traderctr.userController,
-		traderctr.user,
 		traderk,
 	);
 	//await faucet_spam(client.traderctr, client.bidPayer, client.connection);
@@ -105,13 +104,12 @@ async function marketMaker() {
 		console.log("txh if initOpenOrdersInstr called: " + txh)
 	}
 
-	console.log('pay')
 	const bidder_usdc = await getBalance(USDC_MINT, traderk.publicKey, client.connection);
 	const builder = new FastTXNBuilder(traderk, client.connection);
 	if (bidder_usdc > new BN(1000000)) {
 		// @ts-ignore
 		builder.add(await makeDepositCollateralIx(client.trader, new BN(bidder_usdc)));
-		builder.singers.push(client.bidPayer);
+		builder.singers.push(client.traderk);
 	}
 
 	if (builder.ixs.length) {
@@ -130,7 +128,6 @@ async function marketMaker() {
 			max_size: 10000, // increased size due to low price of sol/eth pair, probably should add market specific sizing
 			time_requote: 1000
 		})
-	console.log('me')
 	strat.start();
 	console.log("Strat started on cAsset: " + cAssetMint)
 }

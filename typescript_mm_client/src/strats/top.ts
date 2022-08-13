@@ -102,8 +102,8 @@ export class TopOfBookStrat implements MM_Strat {
             )
         }
 
-        singers.push(this.mmclient.bidPayer);
-        const builder = new FastTXNBuilder(this.mmclient.bidPayer, this.mmclient.connection, singers);
+        singers.push(this.mmclient.traderk);
+        const builder = new FastTXNBuilder(this.mmclient.traderk, this.mmclient.connection, singers);
 
         if (ordersToCancel.length) builder.add(await this.mmclient.cancelOrderIx(ordersToCancel));
         if (bidix) builder.add(bidix);

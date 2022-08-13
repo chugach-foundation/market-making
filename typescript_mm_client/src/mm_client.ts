@@ -54,6 +54,7 @@ export class CypherMMClient {
     private lmarket: LiveMarket
     trader: CypherUser
     traderctr: CypherUserController
+    traderk: Keypair
 
 
     private cAssetMint: PublicKey
@@ -63,10 +64,11 @@ export class CypherMMClient {
     private quoteDecimals: number
     private baseDecimals: number
 
-    private constructor(cInfo: cAssetMarketInfo, lmarket: LiveMarket, connection: Connection, baseDecimals: number, traderctr: CypherUserController) {
+    private constructor(cInfo: cAssetMarketInfo, lmarket: LiveMarket, connection: Connection, baseDecimals: number, traderctr: CypherUserController, traderk: Keypair) {
         this.cAssetMint = cInfo.cAssetMint;
         this.lmarket = lmarket;
         this.connection = connection;
+        this.traderk = traderk;
         this.trader = traderctr.user;
         this.traderctr = traderctr;
         this.baseLotSize = lmarket.market.decoded.baseLotSize;
@@ -75,14 +77,8 @@ export class CypherMMClient {
         this.baseDecimals = baseDecimals;
     }
 
-    static async load(cAssetMint: PublicKey, cluster: Cluster, rpc: string, group: CypherGroup, traderCtr: CypherUserController, trader: CypherUser, traderk: Keypair): Promise<CypherMMClient> { // , 
+    static async load(cAssetMint: PublicKey, cluster: Cluster, rpc: string, group: CypherGroup, traderCtr: CypherUserController, traderk: Keypair): Promise<CypherMMClient> { // , 
         const connection = new Connection(rpc, "processed")
-
-        // const traderk = loadPayer(traderKeyPath);
-        // const tradeclient = new CypherClient(cluster, new NodeWallet(traderk), { commitment: "processed", skipPreflight: true });
-        //const trader = await CypherUser.load(tradeclient, groupAddr, traderk.publicKey);
-        // const traderctr = await CypherUserController.loadOrCreate(tradeclient, groupAddr);
-        // const group = await CypherGroup.load(tradeclient, groupAddr);
         const dexkey = group.getDexMarket(cAssetMint).address;
 
         const cInfo: cAssetMarketInfo = {
@@ -104,12 +100,8 @@ export class CypherMMClient {
         await lmarket.start((info) => { });
         const baseDecimals = group.getTokenViewer(cAssetMint).decimals;
 
-        return new CypherMMClient(cInfo, lmarket, connection, baseDecimals, traderCtr); //, 
+        return new CypherMMClient(cInfo, lmarket, connection, baseDecimals, traderCtr, traderk); //, 
 
-    }
-
-    get bidPayer(): Keypair {
-        return (this.traderctr.client.anchorProvider.wallet as NodeWallet).payer;
     }
 
     async depositMarginCollateralIx(amount: BN): Promise<TransactionInstruction> {
