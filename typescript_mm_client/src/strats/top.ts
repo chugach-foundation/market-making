@@ -10,11 +10,11 @@ import {
 import { createEmitAndSemanticDiagnosticsBuilderProgram } from "typescript";
 
 export class TopOfBookStrat implements MM_Strat {
-    mclient: CypherMMClient;
+    mmclient: CypherMMClient;
     hparams: MM_Hyperparams;
 
     constructor(client: CypherMMClient, hparams: MM_Hyperparams) {
-        this.mclient = client;
+        this.mmclient = client;
         this.hparams = hparams;
     }
 
@@ -39,7 +39,7 @@ export class TopOfBookStrat implements MM_Strat {
         const size = this.hparams.max_size;
         let tbid, task;
         try {
-            [tbid, task] = this.mclient.getTopSpread();
+            [tbid, task] = this.mmclient.getTopSpread();
         }
         catch (e) {
             [tbid, task] = [1, 1000000];
@@ -53,16 +53,14 @@ export class TopOfBookStrat implements MM_Strat {
 
         const singers = []
         let bidix: TransactionInstruction;
+        let sellix: TransactionInstruction;
         //let depositMktix: TransactionInstruction;
-        let mintix: TransactionInstruction;
-        //const mintix = this.mclient.makeAskInstruction(qask, size);
 
         //TODO -- Modify this segment to avoid checking if buy and if sell now that we've separated into two accounts
-        let oinfo = await this.mclient.getOutOrdersInfo(this.mclient.bidctr);
+        let oinfo = await this.mmclient.getOutOrdersInfo(this.mmclient.traderctr);
         const bidsize = size, asksize = size;
 
-        let bidsToCancel: Order[] = []
-        let mintsToCancel: Order[] = []
+        let ordersToCancel: Order[] = []
 
         if (oinfo.bidPrice == qbid || oinfo.bidPrice == qbid - .0001) {
             //Don't frontrun self, but check if we need to reinforce the order
@@ -70,20 +68,20 @@ export class TopOfBookStrat implements MM_Strat {
             qbid = oinfo.bidPrice;
             const dif = bidsize - oinfo.bidSize;
             if (dif > .1) {
-                bidix = await this.mclient.makeBidInstruction(qbid, dif);
+                bidix = await this.mmclient.placeOrderIx(qbid, dif, "buy");
                 //singers.push(this.mclient.bidPayer);
             }
         }
         else {
-            bidix = await this.mclient.makeBidInstruction(qbid, bidsize);
+            bidix = await this.mmclient.placeOrderIx(qbid, bidsize, "buy");
             //singers.push(this.mclient.bidPayer);
             oinfo.orders.map(
                 (order) => {
-                    order.side == "buy" ? bidsToCancel.push(order) : {};
+                    order.side == "buy" ? ordersToCancel.push(order) : {};
                 }
             )
         }
-        oinfo = await this.mclient.getOutOrdersInfo(this.mclient.mintctr);
+
         if (oinfo.askPrice == qask || oinfo.askPrice == qask + .0001) {
             //Don't frontrun self, but check if we need to reinforce the order
             //Add the fraction missing cuz queue priority
@@ -91,29 +89,27 @@ export class TopOfBookStrat implements MM_Strat {
             const dif = asksize - oinfo.askSize;
             if (dif > .1) {
                 //depositMktix = await this.mclient.depositMintCollateralInstruction(qask, dif);
-                mintix = await this.mclient.makeMintInstruction(qask, dif);
+                sellix = await this.mmclient.placeOrderIx(qask, dif, "sell");
             }
         }
         else {
             //depositMktix = await this.mclient.depositMintCollateralInstruction(qask, asksize);
-            mintix = await this.mclient.makeMintInstruction(qask, asksize);
+            sellix = await this.mmclient.placeOrderIx(qask, asksize, "sell");
             oinfo.orders.map(
                 (order) => {
-                    order.side == "sell" ? mintsToCancel.push(order) : {};
+                    order.side == "sell" ? ordersToCancel.push(order) : {};
                 }
             )
         }
 
-        singers.push(this.mclient.mintPayer);
-        singers.push(this.mclient.bidPayer);
-        const builder = new FastTXNBuilder(this.mclient.mintPayer, this.mclient.connection, singers);
-        
-        if (bidsToCancel.length) builder.add(await this.mclient.makeCancelBidOrdersInstructions(bidsToCancel));
-        if (mintsToCancel.length) builder.add(await this.mclient.makeCancelMintOrdersAndWithdrawMktCollateralInstructions(mintsToCancel));
+        singers.push(this.mmclient.bidPayer);
+        const builder = new FastTXNBuilder(this.mmclient.bidPayer, this.mmclient.connection, singers);
+
+        if (ordersToCancel.length) builder.add(await this.mmclient.cancelOrderIx(ordersToCancel));
         if (bidix) builder.add(bidix);
+        if (sellix) builder.add(sellix);
         //if (depositMktix) builder.add(depositMktix);
-        if (mintix) builder.add(mintix);
-        const six = await this.mclient.makeSettleFundsInstruction();
+        const six = await this.mmclient.settleFundsIx();
         builder.add(six);
 
         if (builder.ixs.length <= 2) {
@@ -122,7 +118,7 @@ export class TopOfBookStrat implements MM_Strat {
 
         const { execute } = await builder.build();
         const txh = await execute();
-        await this.mclient.connection.confirmTransaction(txh, "processed");
+        await this.mmclient.connection.confirmTransaction(txh, "processed");
         return txh;
     }
 }

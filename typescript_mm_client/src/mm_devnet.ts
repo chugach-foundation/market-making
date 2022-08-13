@@ -1,4 +1,4 @@
-import { PublicKey, Keypair, Connection } from "@solana/web3.js";
+import { PublicKey, Keypair, Connection, Transaction } from "@solana/web3.js";
 import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
 import { CypherMMClient } from "./mm_client";
 import { loadPayer, FastTXNBuilder, getBalance } from "./utils";
@@ -10,11 +10,15 @@ import {
 	CypherClient,
 	CypherGroup,
 	CypherUserController,
+	makeInitOpenOrdersIx,
+	makeDepositCollateralIx,
+	makeInitCypherUserIx,
+	CypherUser
 } from "@chugach-foundation/cypher-client";
-import { splToUiAmount } from "@chugach-foundation/cypher-client/lib/utils/tokenAmount";
+import { deriveOpenOrdersAddress, deriveMarketAuthority } from "@chugach-foundation/cypher-client/lib/utils";
 import { BN } from "@project-serum/anchor";
 import { ASSOCIATED_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@project-serum/anchor/dist/cjs/utils/token";
-import {Token} from "@solana/spl-token"
+import { Token } from "@solana/spl-token"
 
 const USDC_MINT = new PublicKey("DPhNUKVhnrkdbq37GUgTUBRbZLsvziX1p5e5YUXyjBsb");
 
@@ -23,93 +27,100 @@ export const wait = (delayMS: number) =>
 
 
 const tenk = new BN(10000000000);
-async function faucet_spam(ctr : CypherUserController, payer : Keypair, con : Connection){
+async function faucet_spam(ctr: CypherUserController, payer: Keypair, con: Connection) {
 	const builder = new FastTXNBuilder(payer, con);
 	const ata = await Token.getAssociatedTokenAddress(
 		ASSOCIATED_PROGRAM_ID,
 		TOKEN_PROGRAM_ID,
 		USDC_MINT,
 		payer.publicKey
-	  );
+	);
+
+	// @ts-ignore
 	const ix = await ctr.client.testDriver.getMintInstr(ata, tenk);
-	while (true){
-		for(let i = 0; i < 37; i++){
-			builder.add(ix);
-		}
-		const {execute} = await builder.build();
-		const txh = await execute();
-		console.log(txh);
-		builder.ixs = [];
+	for (let i = 0; i < 37; i++) {
+		builder.add(ix);
 	}
+	const { execute } = await builder.build();
+	const txh = await execute();
+	console.log(txh);
+	builder.ixs = [];
 }
+
 
 
 async function marketMaker() {
 	let cluster: Cluster = "devnet";
+	console.log('fuck')
 
-	let bidk = loadPayer(process.env.CKEY ?? process.env.SECRET_KEY);
-	let groupAddr: PublicKey = new PublicKey("7aDJqXVTexwugfKypP4zi4yncUkhoJDZLrZ2K9unRqu7");
+	let traderk = loadPayer(process.env.CMKEY ?? process.env.SECRET_KEY);
+	let groupAddr: PublicKey = new PublicKey("B9v8Nbd2X9UJmVF4ZSng1Nj6wQ9Q86LfEFUbWUw7E7XU");
 
-	const bidclient = new CypherClient(cluster, new NodeWallet(bidk), { commitment: "processed", skipPreflight: true });
-	let rpcAddy = 'https://psytrbhymqlkfrhudd.dev.genesysgo.net:8899/';
+	const tradeclient = new CypherClient(cluster, new NodeWallet(traderk), { commitment: "processed", skipPreflight: true });
+	makeInitCypherUserIx
+	let rpcAddy = 'https://devnet.genesysgo.net';
 
-	const bidctr = await CypherUserController.loadOrCreate(bidclient, groupAddr);
-	const group = await CypherGroup.load(bidclient, groupAddr);
-	let cAssetMint = group.cAssetMints[5];
+	const traderctr = await CypherUserController.loadOrCreate(tradeclient, groupAddr);
+	const group = await CypherGroup.load(tradeclient, groupAddr);
+	let cAssetMint = group.cAssetMints[0];
 	let cAssetMarket = group.getDexMarket(cAssetMint).address;
 	let programAddress = new PublicKey('DsGUdHQY2EnvWbN5VoSZSyjL4EWnStgaJhFDmJV34GQQ');
 
+	const [newAddr, bump] = await CypherUserController.deriveAddress(tradeclient, groupAddr);
+	// const initUserIx = await makeInitCypherUserIx(tradeclient, groupAddr, newAddr, bump);
+	// const tx = new Transaction();
+	// tx.add(initUserIx);
+	// await tradeclient.anchorProvider.sendAndConfirm(tx, [traderk]);
+
+	console.log('you')
 	const client = await CypherMMClient.load(
 		cAssetMint,
 		"devnet",
 		rpcAddy,
-		groupAddr,
-		process.env.CKEY ?? process.env.SECRET_KEY,
-		process.env.CKEYTWO ?? process.env.TEST_KEY
+		group,
+		traderctr.userController,
+		traderctr.user,
+		traderk,
 	);
-	//await faucet_spam(client.bidctr, client.bidPayer, client.connection);
-	const bidderInitOpenOrdersInstr = await client.bidctr.makeInitOpenOrdersInstr(cAssetMint);
-	const minterInitOpenOrdersInstr = await client.mintctr.makeInitOpenOrdersInstr(cAssetMint);
-	//console.log(client.mintPayer.publicKey.toString());
-	if (bidderInitOpenOrdersInstr || minterInitOpenOrdersInstr) {
-		
-		
-		const builder = new FastTXNBuilder(client.mintPayer, client.connection);
-		if(bidderInitOpenOrdersInstr){
+	//await faucet_spam(client.traderctr, client.bidPayer, client.connection);
+	const [deriveOOAccount, bumpoo] = await deriveOpenOrdersAddress(cAssetMarket, traderctr.user.address, CONFIGS[cluster].CYPHER_PID);
+	const ooAccount = await tradeclient.connection.getAccountInfo(deriveOOAccount, "processed");
+
+	if (!ooAccount) {
+
+		const bidderInitOpenOrdersInstr = await makeInitOpenOrdersIx(client.traderctr.user, cAssetMint);
+
+		const builder = new FastTXNBuilder(traderk, client.connection);
+		if (bidderInitOpenOrdersInstr) {
 			builder.add(bidderInitOpenOrdersInstr);
-			builder.singers.push(client.bidPayer)
+			builder.singers.push(traderk)
 		}
-		if (minterInitOpenOrdersInstr){
-			builder.add(minterInitOpenOrdersInstr);
-			builder.singers.push(client.mintPayer);
-		}
+
 		const { execute } = await builder.build();
 		const txh = await execute();
 		let res = await client.connection.confirmTransaction(txh, "confirmed");
-		if (res.value.err){
+		if (res.value.err) {
 			throw new Error("Failed to create open orders accounts!!");
 		}
 		console.log("txh if initOpenOrdersInstr called: " + txh)
 	}
 
-	const bidder_usdc = await getBalance(USDC_MINT, bidk.publicKey, client.connection);
-	const minter_usdc = await getBalance(USDC_MINT, client.mintPayer.publicKey, client.connection);
-	const builder = new FastTXNBuilder(client.mintPayer, client.connection);
-	if(bidder_usdc > new BN(1000000)){
-		builder.add(await client.depositMarketBidCollateralInstr(cAssetMint, bidder_usdc));
+	console.log('pay')
+	const bidder_usdc = await getBalance(USDC_MINT, traderk.publicKey, client.connection);
+	const builder = new FastTXNBuilder(traderk, client.connection);
+	if (bidder_usdc > new BN(1000000)) {
+		// @ts-ignore
+		builder.add(await makeDepositCollateralIx(client.trader, new BN(bidder_usdc)));
 		builder.singers.push(client.bidPayer);
 	}
-	if (minter_usdc > new BN(1000000)){
-		builder.add(await client.depositMarketMintCollateralInstr(cAssetMint, minter_usdc));
-		builder.singers.push(client.mintPayer);
-	}
-	if(builder.ixs.length){
+
+	if (builder.ixs.length) {
 		console.log("depositing collateral...");
-		const {execute} = await builder.build();
+		const { execute } = await builder.build();
 		const txh = await execute();
 		console.log(txh);
 		const conf = await client.connection.confirmTransaction(txh, "confirmed");
-		if(conf.value.err){
+		if (conf.value.err) {
 			console.log(conf.value.err);
 			throw new Error("FAILED TO DEPOSIT COLLATERAL");
 		}
@@ -119,6 +130,7 @@ async function marketMaker() {
 			max_size: 10000, // increased size due to low price of sol/eth pair, probably should add market specific sizing
 			time_requote: 1000
 		})
+	console.log('me')
 	strat.start();
 	console.log("Strat started on cAsset: " + cAssetMint)
 }

@@ -17,7 +17,7 @@ import {
 const interval = 1000
 const control = { isRunning: true, interval: interval };
 
-let connection = new Connection('https://psytrbhymqlkfrhudd.dev.genesysgo.net:8899/', "processed");
+let connection = new Connection('https://ssc-dao.genesysgo.net', "processed");
 console.log('connection made: ' + connection.toString());
 
 export const wait = (delayMS: number) =>
@@ -25,7 +25,7 @@ export const wait = (delayMS: number) =>
 
 
 async function getOrderbookData(cAssetMarket: PublicKey) {
-    let market = await Market.load(connection, cAssetMarket, {}, CONFIGS.devnet.DEX_PID);
+    let market = await Market.load(connection, cAssetMarket, {}, CONFIGS["mainnet-beta"].DEX_PID);
     const livemarket = new LiveMarket(connection, market);
     await livemarket.start((info) => {
         livemarket.printBook();
@@ -39,18 +39,18 @@ async function getOrderbookData(cAssetMarket: PublicKey) {
 
 async function run() {
 
-    let cluster: Cluster = "devnet";
-    let bidk = loadPayer(process.env.CKEY);
-    let groupAddr: PublicKey = new PublicKey("7aDJqXVTexwugfKypP4zi4yncUkhoJDZLrZ2K9unRqu7");
+    let cluster: Cluster = "mainnet-beta";
+    let traderk = loadPayer(process.env.CMKEY);
+    let groupAddr: PublicKey = new PublicKey("BByD8HAf6mqRKZTryjywHG4FvawZKhrrdBjPfpRHYJnv");
 
-    const bidclient = new CypherClient(cluster, new NodeWallet(bidk), { commitment: "processed", skipPreflight: true });
+    const tradeclient = new CypherClient(cluster, new NodeWallet(traderk), { commitment: "processed", skipPreflight: true });
 
 
-    const bidctr = await CypherUserController.loadOrCreate(bidclient, groupAddr);
-    const group = await CypherGroup.load(bidclient, groupAddr);
-    let cAssetMint = group.cAssetMints[5];
+    const traderctr = await CypherUserController.loadOrCreate(tradeclient, groupAddr);
+    const group = await CypherGroup.load(tradeclient, groupAddr);
+    let cAssetMint = group.cAssetMints[0];
     let cAssetMarket = group.getDexMarket(cAssetMint).address;
-    let programAddress = new PublicKey('DsGUdHQY2EnvWbN5VoSZSyjL4EWnStgaJhFDmJV34GQQ');
+    let programAddress = CONFIGS["mainnet-beta"].DEX_PID;
     console.log('cAssetMint: ' + cAssetMint.toString() + ' | ' + 'programAddress: ' + programAddress.toString());
     console.log(`Market address : ${cAssetMarket.toString()}`)
     getOrderbookData(cAssetMarket);
