@@ -1,75 +1,105 @@
-use {
-    crate::accounts_cache::{AccountState, AccountsCache},
-    log::{info, warn},
-    solana_client::{client_error::ClientError, nonblocking::rpc_client::RpcClient},
-    solana_sdk::{commitment_config::CommitmentConfig, pubkey::Pubkey},
-    std::{sync::Arc, time::Duration},
-    tokio::{
-        sync::{
-            broadcast::{channel, Receiver},
-            Mutex,
-        },
-        time::sleep,
-    },
-};
+use std::sync::Arc;
+use futures::StreamExt;
+use log::{warn, info};
+use solana_account_decoder::UiAccountEncoding;
+use solana_client::{nonblocking::{pubsub_client::{PubsubClient, PubsubClientError}, rpc_client::RpcClient}, rpc_config::RpcAccountInfoConfig, client_error::ClientError};
+use solana_sdk::{pubkey::Pubkey, commitment_config::CommitmentConfig};
+use tokio::{sync::broadcast::{Sender, channel}, task::JoinHandle};
+
+use crate::{accounts_cache::{AccountsCache, AccountState}, providers::get_account_info};
+
+#[derive(Clone, Copy)]
+pub struct AccountSubscription {
+    pub key: Pubkey,
+    pub account_type: Option<u8>,
+}
 
 pub struct AccountInfoService {
     cache: Arc<AccountsCache>,
-    client: Arc<RpcClient>,
-    keys: Vec<Pubkey>,
-    shutdown_receiver: Mutex<Receiver<bool>>,
+    pubsub_client: Arc<PubsubClient>,
+    rpc_client: Arc<RpcClient>,
+    subs: Vec<Pubkey>,
+    tasks: Vec<JoinHandle<()>>,
+    shutdown: Arc<Sender<bool>>,
 }
 
 impl AccountInfoService {
-    pub fn default() -> Self {
+    pub async fn default() -> Self {
         Self {
             cache: Arc::new(AccountsCache::default()),
-            client: Arc::new(RpcClient::new("http://localhost:8899".to_string())),
-            keys: Vec::new(),
-            shutdown_receiver: Mutex::new(channel::<bool>(1).1),
+            pubsub_client: Arc::new(PubsubClient::new("wss://devnet.genesysgo.net").await.unwrap()),
+            rpc_client: Arc::new(RpcClient::new("http://localhost:8899".to_string())),
+            subs: Vec::new(),
+            tasks: Vec::new(),
+            shutdown: Arc::new(channel::<bool>(1).0)
         }
     }
 
     pub fn new(
         cache: Arc<AccountsCache>,
-        client: Arc<RpcClient>,
-        keys: &[Pubkey],
-        shutdown_receiver: Receiver<bool>,
-    ) -> AccountInfoService {
-        AccountInfoService {
+        pubsub_client: Arc<PubsubClient>,
+        rpc_client: Arc<RpcClient>,
+        subs: &[Pubkey],
+        shutdown: Arc<Sender<bool>>,
+    ) -> Self {
+        Self {
             cache,
-            client,
-            keys: Vec::from(keys),
-            shutdown_receiver: Mutex::new(shutdown_receiver),
+            pubsub_client,
+            rpc_client,
+            shutdown,
+            subs: Vec::from(subs),
+            tasks: Vec::new()
         }
     }
 
-    pub async fn start_service(self: &Arc<Self>) {
-        let rpc_cloned_self = self.clone();
-
-        for i in (0..self.keys.len()).step_by(100) {
-            rpc_cloned_self
-                .update_infos(i, self.keys.len().min(i + 100))
-                .await
-                .unwrap();
+    pub async fn start_service(
+        mut self
+    ) {
+        match self.get_account_infos().await {
+            Ok(()) => (),
+            Err(e) => {
+                warn!("[AIS] There was an error while fetching initial account infos: {}", e.to_string());
+            }
         }
 
-        let cself = Arc::clone(&rpc_cloned_self);
-        let mut shutdown = rpc_cloned_self.shutdown_receiver.lock().await;
-        tokio::select! {
-            _ = cself.update_infos_replay() => {},
-            _ = shutdown.recv() => {
-                info!("[AIS] Received shutdown signal, stopping.");
-            }
+        for account_sub in self.subs {
+            let handler = SubscriptionHandler::new(
+                Arc::clone(&self.cache),
+                Arc::clone(&self.pubsub_client),
+                Arc::clone(&self.shutdown),
+                account_sub,
+            );
+
+            let t = tokio::spawn(
+                async move {
+                    match handler.run().await {
+                        Ok(_) => (),
+                        Err(e) => {
+                            warn!("There was an error running subscription handler for account {}: {}", account_sub, e.to_string());
+                        }
+                    }
+                }
+            );
+            self.tasks.push(t);
+        }
+        
+        for task in self.tasks {
+            let res = tokio::join!(task);
+
+            match res {
+                (Ok(_),) => (),
+                (Err(e),) => {
+                    warn!("There was an error joining with task: {}", e.to_string());
+                }
+            };
         }
     }
 
     #[inline(always)]
-    async fn update_infos(self: &Arc<Self>, from: usize, to: usize) -> Result<(), ClientError> {
-        let account_keys = &self.keys[from..to];
+    async fn get_account_infos(&self) -> Result<(), ClientError> {
         let rpc_result = self
-            .client
-            .get_multiple_accounts_with_commitment(account_keys, CommitmentConfig::confirmed())
+            .rpc_client
+            .get_multiple_accounts_with_commitment(&self.subs, CommitmentConfig::confirmed())
             .await;
 
         let res = match rpc_result {
@@ -86,7 +116,7 @@ impl AccountInfoService {
         while !infos.is_empty() {
             let next = infos.pop().unwrap();
             let i = infos.len();
-            let key = account_keys[i];
+            let key = self.subs[i];
             //info!("[AIS] [{}/{}] Fetched account {}", i, infos.len(), key.to_string());
 
             let info = match next {
@@ -101,11 +131,10 @@ impl AccountInfoService {
                 }
             };
             //info!("[AIS] [{}/{}] Account {} has data: {}", i, infos.len(), key.to_string(), base64::encode(&info.data));
-
             let res = self.cache.insert(
                 key,
                 AccountState {
-                    account: info,
+                    account: info.data,
                     slot: res.context.slot,
                 },
             );
@@ -121,23 +150,72 @@ impl AccountInfoService {
         Ok(())
     }
 
-    #[inline(always)]
-    async fn update_infos_replay(self: Arc<Self>) {
+}
+
+struct SubscriptionHandler {
+    cache: Arc<AccountsCache>,
+    pubsub_client: Arc<PubsubClient>,
+    shutdown: Arc<Sender<bool>>,
+    sub: Pubkey,
+}
+
+impl SubscriptionHandler {
+    pub fn new(
+        cache: Arc<AccountsCache>,
+        pubsub_client: Arc<PubsubClient>,
+        shutdown: Arc<Sender<bool>>,
+        sub: Pubkey,
+    ) -> Self {
+        Self {
+            cache,
+            pubsub_client,
+            shutdown,
+            sub
+        }
+    }
+
+    pub async fn run(
+        self
+    ) -> Result<(), PubsubClientError> {
+        let mut shutdown_receiver = self.shutdown.subscribe();
+        let sub = self.pubsub_client
+            .account_subscribe(
+                &self.sub,
+                Some(RpcAccountInfoConfig {
+                    commitment: Some(CommitmentConfig::confirmed()),
+                    encoding: Some(UiAccountEncoding::Base64),
+                    ..Default::default()
+                }),
+            )
+            .await
+            .unwrap();
+
+        let mut stream = sub.0;
         loop {
-            let aself = self.clone();
+            tokio::select! {
+                update = stream.next() => {
+                    if update.is_some() {
+                        let account_res = update.unwrap();
+                        let account_data = get_account_info(&account_res.value).unwrap();
+                        let res = self.cache.insert(self.sub, AccountState{
+                            account: account_data,
+                            slot: account_res.context.slot,
+                        });
 
-            for i in (0..self.keys.len()).step_by(100) {
-                let res = aself.update_infos(i, self.keys.len().min(i + 100)).await;
-
-                if res.is_err() {
-                    warn!(
-                        "[AIS] Failed to update account infos: {}",
-                        res.err().unwrap().to_string()
-                    );
+                        match res {
+                            Ok(_) => (),
+                            Err(_) => {
+                                warn!("[AIS] There was an error while inserting account info in the cache.");
+                            }
+                        }
+                    }
+                },
+                _ = shutdown_receiver.recv() => {
+                    info!("[AIS] Shutting down subscription handler for {}", self.sub);
+                    break;
                 }
             }
-
-            sleep(Duration::from_millis(500)).await;
         }
+        Ok(())
     }
 }

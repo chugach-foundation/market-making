@@ -3,10 +3,14 @@
     "group": "devnet2",
     "inventoryManagerConfig": {
         "initialCapital": 1000,
-        "maxQuote": 2500,
-        "shapeNum": 1,
-        "shapeDenom": 100000,
+        "maxQuote": 77,
+        "shapeNum": 9,
+        "shapeDenom": 1000,
         "spread": 50
+    },
+    "orderManagerConfig": {
+        "layers": 5,
+        "spacingBps": 25
     },
     "market": {
         "name": "BTC/ETH"

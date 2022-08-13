@@ -1,4 +1,6 @@
 #![allow(dead_code)]
+
+use solana_client::nonblocking::pubsub_client::PubsubClient;
 use {
     super::order_manager::OrderManager,
     super::{InventoryManager, Worker, WorkerConfig},
@@ -28,9 +30,10 @@ use {
 pub struct MarketMaker {
     // services
     rpc_client: Arc<RpcClient>,
+    pubsub_client: Arc<PubsubClient>,
     /// polling keys is the keys used by the account info service
     polling_keys: Vec<Pubkey>,
-    ai_service: Arc<AccountInfoService>,
+    ai_service: AccountInfoService,
     cm_service: Arc<ChainMetaService>,
     inventory_manager: Arc<InventoryManager>,
     order_manager: Arc<OrderManager>,
@@ -62,8 +65,9 @@ pub struct MarketMaker {
 
 #[allow(clippy::too_many_arguments)]
 impl MarketMaker {
-    pub fn new(
+    pub async fn new(
         rpc_client: Arc<RpcClient>,
+        pubsub_client: Arc<PubsubClient>,
         config: Arc<MarketMakerConfig>,
         cypher_config: Arc<CypherConfig>,
         cypher_group: Box<CypherGroup>,
@@ -75,6 +79,7 @@ impl MarketMaker {
     ) -> Self {
         Self {
             rpc_client,
+            pubsub_client,
             config,
             cypher_config,
             owner_keypair,
@@ -91,7 +96,7 @@ impl MarketMaker {
             cypher_group_provider: CypherGroupProviderWrapper::default(),
             orderbook_provider: OrderBookProviderWrapper::default(),
             open_orders_provider: OpenOrdersProviderWrapper::default(),
-            ai_service: Arc::new(AccountInfoService::default()),
+            ai_service: AccountInfoService::default().await,
             cm_service: Arc::new(ChainMetaService::default()),
             inventory_manager: Arc::new(InventoryManager::default()),
             order_manager: Arc::new(OrderManager::default()),
@@ -196,12 +201,15 @@ impl MarketMaker {
         self.polling_keys.push(self.cypher_user_pubkey);
         self.polling_keys.push(self.cypher_group_pubkey);
 
-        self.ai_service = Arc::new(AccountInfoService::new(
+        info!("Subscribing to {} accounts using websocket.", self.polling_keys.len());
+
+        self.ai_service = AccountInfoService::new(
             Arc::clone(&self.accounts_cache.cache),
+            Arc::clone(&self.pubsub_client),
             Arc::clone(&self.rpc_client),
             &self.polling_keys,
-            self.shutdown_sender.subscribe(),
-        ));
+            self.shutdown_sender.clone(),
+        );
 
         Ok(())
     }
@@ -372,7 +380,7 @@ async fn get_serum_market(
         }
     };
 
-    let market = parse_dex_account(ai.data);
+    let market = parse_dex_account(&ai.data);
 
     Ok(market)
 }

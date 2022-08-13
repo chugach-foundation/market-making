@@ -1,5 +1,6 @@
 use {
     crate::accounts_cache::AccountsCache,
+    super::get_account_info,
     cypher::utils::parse_dex_account,
     log::{info, warn},
     serum_dex::state::OpenOrders,
@@ -85,8 +86,7 @@ impl OpenOrdersProvider {
     async fn process_updates(&self, key: Pubkey) -> Result<(), OpenOrdersProviderError> {
         if key == self.open_orders_pubkey {
             let ai = self.cache.get(&key).unwrap();
-
-            let dex_open_orders: OpenOrders = parse_dex_account(ai.account.data.to_vec());
+            let dex_open_orders: OpenOrders = parse_dex_account(&ai.account);
 
             match self.sender.send(dex_open_orders) {
                 Ok(_) => {

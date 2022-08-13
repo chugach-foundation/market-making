@@ -13,6 +13,7 @@ use {
         CypherGroup, CypherMarket, CypherToken,
     },
     log::{info, warn},
+    serde::{Deserialize, Serialize},
     serum_dex::{
         instruction::{CancelOrderInstructionV2, NewOrderInstructionV3, SelfTradeBehavior},
         matching::{OrderType, Side},
@@ -32,6 +33,13 @@ use {
         Mutex, RwLock,
     },
 };
+
+#[derive(Debug, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OrderManagerConfig {
+    pub layers: u8,
+    pub spacing_bps: u8,
+}
 
 pub struct ManagedOrder {
     pub order_id: u128,

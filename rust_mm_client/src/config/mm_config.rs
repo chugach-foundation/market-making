@@ -1,5 +1,7 @@
 use {
-    crate::market_maker::InventoryManagerConfig,
+    crate::{
+        market_maker::{InventoryManagerConfig, OrderManagerConfig}
+    },
     serde::{Deserialize, Serialize},
     serde_json,
     std::{error::Error, fs::File, io::BufReader},
@@ -11,6 +13,7 @@ pub struct MarketMakerConfig {
     pub wallet: String,
     pub group: String,
     pub inventory_manager_config: InventoryManagerConfig,
+    pub order_manager_config: OrderManagerConfig,
     pub market: MarketConfig,
 }
 

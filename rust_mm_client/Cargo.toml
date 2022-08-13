@@ -29,11 +29,11 @@ serde_json = "1.0.81"
 clap = { version = "3.0", features = ["derive"] }
 log = "0.4.17"
 chrono = "0.4.19"
-cypher = { git = "https://github.com/chugach-foundation/cypher-cpi.git", rev="657f5d3", features = [ "client" ] }
+cypher = { git = "https://github.com/chugach-foundation/cypher-cpi.git", rev = "29e7b2d", features = [ "client" ] }
 faucet = { git = "https://github.com/chugach-foundation/cypher-cpi.git" }
 serum_dex = { git = "https://github.com/chugach-foundation/serum-dex.git", rev="2fab8b9", features = ["fuzz", "no-entrypoint" ] }
 jet-proto-math = { git = "https://github.com/chugach-foundation/jet-program-libraries.git", rev="ac8909b" }
 jet-proto-proc-macros = { git = "https://github.com/chugach-foundation/jet-program-libraries.git", rev="ac8909b" }
-anchor-lang = ">=0.24.2"
+anchor-lang = { git = "https://github.com/chugach-foundation/anchor.git" }
 anchor-spl = { version = ">=0.24.2", features = ["token", "associated_token", "dex"] }
 anchor-client = ">=0.24.2" 

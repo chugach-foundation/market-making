@@ -4,6 +4,7 @@ use {
         serum_slab::{OrderBookOrder, Slab},
         MarketMakerError,
     },
+    super::get_account_info,
     arrayref::array_refs,
     log::{info, warn},
     solana_sdk::pubkey::Pubkey,
@@ -132,8 +133,7 @@ impl OrderBookProvider {
 
         if key == self.bids {
             let bid_ai = self.cache.get(&key).unwrap();
-
-            let (_bid_head, bid_data, _bid_tail) = array_refs![&bid_ai.account.data, 5; ..; 7];
+            let (_bid_head, bid_data, _bid_tail) = array_refs![&bid_ai.account, 5; ..; 7];
             let bid_data = &mut bid_data[8..].to_vec().clone();
             let bids = Slab::new(bid_data);
 
@@ -143,8 +143,7 @@ impl OrderBookProvider {
             updated = true;
         } else if key == self.asks {
             let ask_ai = self.cache.get(&key).unwrap();
-
-            let (_ask_head, ask_data, _ask_tail) = array_refs![&ask_ai.account.data, 5; ..; 7];
+            let (_ask_head, ask_data, _ask_tail) = array_refs![&ask_ai.account, 5; ..; 7];
             let ask_data = &mut ask_data[8..].to_vec().clone();
             let asks = Slab::new(ask_data);
 

@@ -1,3 +1,6 @@
+use base64::DecodeError;
+use solana_client::nonblocking::pubsub_client::PubsubClient;
+
 mod accounts_cache;
 mod config;
 mod fast_tx_builder;
@@ -60,6 +63,9 @@ pub enum MarketMakerError {
     ErrorCreatingOpenOrders,
     ErrorDepositing,
     ErrorSubmittingOrders,
+    InvalidAccountResponseFormat,
+    InvalidAccountDataEncoding,
+    AccountInfoDecoding(DecodeError),
     ChannelSendError,
     JoiningTaskError,
     InitServicesError,
@@ -145,6 +151,13 @@ async fn main() -> Result<(), MarketMakerError> {
         cluster_config.rpc_url.to_string(),
         CommitmentConfig::confirmed(),
     ));
+    info!(
+        "Initializing pubsub client for cluster-{} with url: {}",
+        mm_config.group, cluster_config.rpc_url
+    );
+    let pubsub_client = Arc::new(PubsubClient::new(
+        &cluster_config.pubsub_url
+    ).await.unwrap());
 
     info!(
         "Attempting to get the cypher group account with key: {}",
@@ -216,6 +229,7 @@ async fn main() -> Result<(), MarketMakerError> {
 
     let mm = MarketMaker::new(
         Arc::clone(&rpc_client),
+        Arc::clone(&pubsub_client),
         Arc::clone(&mm_config),
         Arc::clone(&cypher_config),
         cypher_group,
@@ -224,7 +238,7 @@ async fn main() -> Result<(), MarketMakerError> {
         cypher_account,
         cypher_user_key,
         shutdown_send.clone(),
-    );
+    ).await;
 
     let mm_t = tokio::spawn(async move {
         let start_res = mm.start().await;
@@ -281,7 +295,7 @@ async fn _get_cypher_group(
         }
     };
 
-    let cypher_group = get_zero_copy_account::<CypherGroup>(&acc.unwrap());
+    let cypher_group = get_zero_copy_account::<CypherGroup>(&acc.unwrap().data);
 
     Ok(cypher_group)
 }
@@ -539,7 +553,7 @@ async fn _fetch_cypher_user(
         .value;
 
     if res.is_some() {
-        let account_state = get_zero_copy_account::<CypherUser>(&res.unwrap());
+        let account_state = get_zero_copy_account::<CypherUser>(&res.unwrap().data);
         info!("Successfully fetched cypher account.");
         return Ok(account_state);
     }
@@ -558,7 +572,7 @@ async fn _fetch_open_orders(
         .value;
 
     if res.is_some() {
-        let ooa: OpenOrders = parse_dex_account(res.unwrap().data);
+        let ooa: OpenOrders = parse_dex_account(&res.unwrap().data);
         info!("Successfully fetched open orders account.");
         return Ok(ooa);
     }

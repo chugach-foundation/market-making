@@ -1,7 +1,12 @@
+use log::info;
+use solana_account_decoder::UiAccount;
+
+use crate::MarketMakerError;
+
 use {
     dashmap::{mapref::one::Ref, DashMap},
     log::warn,
-    solana_sdk::{account::Account, pubkey::Pubkey},
+    solana_sdk::pubkey::Pubkey,
     tokio::sync::broadcast::{channel, Sender},
 };
 
@@ -12,7 +17,7 @@ pub struct AccountsCache {
 
 #[derive(Debug)]
 pub struct AccountState {
-    pub account: Account,
+    pub account: Vec<u8>,
     pub slot: u64,
 }
 
@@ -35,13 +40,13 @@ impl AccountsCache {
         self.map.get(key)
     }
 
-    pub fn insert(&self, key: Pubkey, data: AccountState) -> Result<(), AccountsCacheError> {
-        //info!("[CACHE] Updating entry for account {}", key.to_string());
+    pub fn insert(&self, key: Pubkey, data: AccountState) -> Result<(), MarketMakerError> {
+        info!("[CACHE] Updating entry for account {}", key.to_string());
         self.map.insert(key, data);
 
         match self.sender.send(key) {
             Ok(_) => {
-                //info!("Updated account with key: {}", key);
+                info!("Updated account with key: {}", key);
                 Ok(())
             }
             Err(_) => {
@@ -49,12 +54,8 @@ impl AccountsCache {
                     "Failed to send message about updated account {}",
                     key.to_string()
                 );
-                Err(AccountsCacheError::ChannelSendError)
+                Err(MarketMakerError::ChannelSendError)
             }
         }
     }
-}
-
-pub enum AccountsCacheError {
-    ChannelSendError,
 }

@@ -1,5 +1,6 @@
 use {
     crate::{accounts_cache::AccountsCache, MarketMakerError},
+    super::get_account_info,
     cypher::{utils::get_zero_copy_account, CypherGroup},
     log::{info, warn},
     solana_sdk::pubkey::Pubkey,
@@ -83,7 +84,6 @@ impl CypherGroupProvider {
     async fn process_updates(&self, key: Pubkey) -> Result<(), MarketMakerError> {
         if key == self.pubkey {
             let ai = self.cache.get(&key).unwrap();
-
             let account_state = get_zero_copy_account::<CypherGroup>(&ai.account);
 
             match self.sender.send(account_state) {

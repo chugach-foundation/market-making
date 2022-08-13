@@ -2,11 +2,15 @@
     "wallet": "/Users/hoak/.config/solana/mm_soleth.json",
     "group": "devnet2",
     "inventoryManagerConfig": {
-        "initialCapital": 1000,
+        "initialCapital": 500,
         "maxQuote": 25000,
         "shapeNum": 1,
         "shapeDenom": 100000,
-        "spread": 50
+        "spread": 25
+    },
+    "orderManagerConfig": {
+        "layers": 5,
+        "spacingBps": 25
     },
     "market": {
         "name": "SOL/ETH"

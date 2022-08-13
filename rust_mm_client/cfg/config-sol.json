@@ -8,6 +8,10 @@
         "shapeDenom": 100000,
         "spread": 50
     },
+    "orderManagerConfig": {
+        "layers": 5,
+        "spacingBps": 25
+    },
     "market": {
         "name": "SOL"
     }
