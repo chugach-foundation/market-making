@@ -41,17 +41,16 @@ impl AccountsCache {
     }
 
     pub fn insert(&self, key: Pubkey, data: AccountState) -> Result<(), MarketMakerError> {
-        info!("[CACHE] Updating entry for account {}", key.to_string());
         self.map.insert(key, data);
 
         match self.sender.send(key) {
             Ok(_) => {
-                info!("Updated account with key: {}", key);
+                info!("[CACHE] Updated account with key: {}", key);
                 Ok(())
             }
             Err(_) => {
                 warn!(
-                    "Failed to send message about updated account {}",
+                    "[CACHE] Failed to send message about updated account {}",
                     key.to_string()
                 );
                 Err(MarketMakerError::ChannelSendError)

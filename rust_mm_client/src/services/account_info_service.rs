@@ -75,7 +75,7 @@ impl AccountInfoService {
                     match handler.run().await {
                         Ok(_) => (),
                         Err(e) => {
-                            warn!("There was an error running subscription handler for account {}: {}", account_sub, e.to_string());
+                            warn!("[AIS] There was an error running subscription handler for account {}: {}", account_sub, e.to_string());
                         }
                     }
                 }
@@ -89,7 +89,7 @@ impl AccountInfoService {
             match res {
                 (Ok(_),) => (),
                 (Err(e),) => {
-                    warn!("There was an error joining with task: {}", e.to_string());
+                    warn!("[AIS] There was an error joining with task: {}", e.to_string());
                 }
             };
         }
@@ -197,6 +197,7 @@ impl SubscriptionHandler {
                     if update.is_some() {
                         let account_res = update.unwrap();
                         let account_data = get_account_info(&account_res.value).unwrap();
+                        info!("[AIS] Received account update for {}, updating cache.", self.sub);
                         let res = self.cache.insert(self.sub, AccountState{
                             account: account_data,
                             slot: account_res.context.slot,

@@ -1,12 +1,12 @@
 {
-    "wallet": "/Users/hoak/.config/solana/mm_sol.json",
+    "wallet": "/Users/hoak/.config/solana/mm_sol2.json",
     "group": "devnet2",
     "inventoryManagerConfig": {
         "initialCapital": 0,
-        "maxQuote": 100000,
+        "maxQuote": 200000,
         "shapeNum": 1,
         "shapeDenom": 100000,
-        "spread": 50
+        "spread": 75
     },
     "orderManagerConfig": {
         "layers": 5,

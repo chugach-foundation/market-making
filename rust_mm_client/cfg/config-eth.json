@@ -10,7 +10,8 @@
     },
     "orderManagerConfig": {
         "layers": 5,
-        "spacingBps": 25
+        "spacingBps": 25,
+        "stepAmount": 20000
     },
     "market": {
         "name": "ETH"

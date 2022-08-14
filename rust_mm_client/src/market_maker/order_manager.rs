@@ -39,7 +39,23 @@ use {
 pub struct OrderManagerConfig {
     pub layers: u8,
     pub spacing_bps: u8,
+    pub step_amount: u32,
 }
+
+// for level in range(0, self._buy_levels):
+//     price = self.get_price() * (Decimal("1") - self._bid_spread - (level * self._order_level_spread))
+//     price = market.quantize_order_price(self.trading_pair, price)
+//     size = self._order_amount + (self._order_level_amount * level)
+//     size = market.quantize_order_amount(self.trading_pair, size)
+//     if size > 0:
+//         buys.append(PriceSize(price, size))
+// for level in range(0, self._sell_levels):
+//     price = self.get_price() * (Decimal("1") + self._ask_spread + (level * self._order_level_spread))
+//     price = market.quantize_order_price(self.trading_pair, price)
+//     size = self._order_amount + (self._order_level_amount * level)
+//     size = market.quantize_order_amount(self.trading_pair, size)
+//     if size > 0:
+//         sells.append(PriceSize(price, size))
 
 pub struct ManagedOrder {
     pub order_id: u128,
@@ -157,7 +173,7 @@ impl OrderManager {
         let bids = ob.bids.read().await;
         let asks = ob.asks.read().await;
         if asks.is_empty() && bids.is_empty() {
-            info!("ORDERMGR-{}] Latest ob for market is empty!", self.symbol)
+            info!("[ORDERMGR-{}] Latest ob for market is empty!", self.symbol)
         } else if asks.is_empty() && !bids.is_empty() {
             info!(
                 "[ORDERMGR-{}] Latest ob for market: {} bids / best bid {}@{} - 0 asks ",
@@ -638,7 +654,7 @@ async fn get_open_orders_with_qty(
         if order_id != u128::default() {
             let price = (order_id >> 64) as u64;
             let side = open_orders.slot_side(i as u8).unwrap();
-            let ob_order = get_order_book_line(orderbook, client_order_id, side).await;
+            let ob_order = get_order_book_line(orderbook, order_id, side).await;
 
             if ob_order.is_some() {
                 oo.push(ManagedOrder {
@@ -657,12 +673,12 @@ async fn get_open_orders_with_qty(
 
 async fn get_order_book_line(
     orderbook: &OrderBook,
-    client_order_id: u64,
+    order_id: u128,
     side: Side,
 ) -> Option<OrderBookOrder> {
     if side == Side::Ask {
         for order in orderbook.asks.read().await.iter() {
-            if order.client_order_id == client_order_id {
+            if order.order_id == order_id {
                 return Some(OrderBookOrder {
                     order_id: order.order_id,
                     price: order.price,
@@ -675,7 +691,7 @@ async fn get_order_book_line(
 
     if side == Side::Bid {
         for order in orderbook.bids.read().await.iter() {
-            if order.client_order_id == client_order_id {
+            if order.order_id == order_id {
                 return Some(OrderBookOrder {
                     order_id: order.order_id,
                     price: order.price,

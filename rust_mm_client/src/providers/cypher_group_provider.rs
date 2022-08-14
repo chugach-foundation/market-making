@@ -1,6 +1,5 @@
 use {
     crate::{accounts_cache::AccountsCache, MarketMakerError},
-    super::get_account_info,
     cypher::{utils::get_zero_copy_account, CypherGroup},
     log::{info, warn},
     solana_sdk::pubkey::Pubkey,

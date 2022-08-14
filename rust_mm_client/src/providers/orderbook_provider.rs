@@ -4,7 +4,6 @@ use {
         serum_slab::{OrderBookOrder, Slab},
         MarketMakerError,
     },
-    super::get_account_info,
     arrayref::array_refs,
     log::{info, warn},
     solana_sdk::pubkey::Pubkey,

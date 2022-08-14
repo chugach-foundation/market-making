@@ -1,6 +1,5 @@
 use {
     crate::accounts_cache::AccountsCache,
-    super::get_account_info,
     cypher::utils::parse_dex_account,
     log::{info, warn},
     serum_dex::state::OpenOrders,
@@ -90,7 +89,6 @@ impl OpenOrdersProvider {
 
             match self.sender.send(dex_open_orders) {
                 Ok(_) => {
-                    //info!("[OOAP] Latest price for {}: {}", self.symbol, price);
                     return Ok(());
                 }
                 Err(_) => {
