@@ -23,6 +23,7 @@ use {
     solana_sdk::{
         hash::Hash,
         instruction::Instruction,
+        pubkey::Pubkey,
         signature::{Keypair, Signature},
         signer::Signer,
         transaction::Transaction,
@@ -83,6 +84,9 @@ pub struct OrderManager {
     orderbook: RwLock<Arc<OrderBook>>,
     inflight_orders: RwLock<InflightOrders>,
     client_order_id: RwLock<u64>,
+    signer: Arc<Keypair>,
+    cypher_user_pubkey: Pubkey,
+    open_orders_pubkey: Pubkey
 }
 
 impl OrderManager {
@@ -99,6 +103,9 @@ impl OrderManager {
             orderbook: RwLock::new(Arc::new(OrderBook::default())),
             inflight_orders: RwLock::new(InflightOrders::default()),
             client_order_id: RwLock::new(1_u64),
+            signer: Arc::new(Keypair::new()),
+            cypher_user_pubkey: Pubkey::default(),
+            open_orders_pubkey: Pubkey::default(),
         }
     }
 
@@ -110,6 +117,9 @@ impl OrderManager {
         ob_receiver: Receiver<Arc<OrderBook>>,
         shutdown_receiver: Receiver<bool>,
         market_state: MarketStateV2,
+        signer: Arc<Keypair>,
+        cypher_user_pubkey: Pubkey,
+        open_orders_pubkey: Pubkey,
     ) -> Self {
         Self {
             symbol,
@@ -119,6 +129,9 @@ impl OrderManager {
             ob_receiver: Mutex::new(ob_receiver),
             shutdown_receiver: Mutex::new(shutdown_receiver),
             market_state: Some(market_state),
+            signer,
+            cypher_user_pubkey,
+            open_orders_pubkey,
             ..OrderManager::default()
         }
     }
@@ -378,10 +391,6 @@ impl OrderManager {
         let inflight_orders = self.inflight_orders.read().await;
         let mut cancelling_orders = inflight_orders.cancelling_orders.write().await;
         let mut ixs: Vec<Instruction> = Vec::new();
-        let cypher_user_pubkey =
-            derive_cypher_user_address(&cypher_group.self_address, &signer.pubkey()).0;
-        let open_orders_pubkey =
-            derive_open_orders_address(&cypher_market.dex_market, &cypher_user_pubkey).0;
 
         for order in stale_orders {
             info!(
@@ -393,8 +402,8 @@ impl OrderManager {
                 cypher_market,
                 cypher_token,
                 &self.market_state.unwrap(),
-                &open_orders_pubkey,
-                &cypher_user_pubkey,
+                &self.open_orders_pubkey,
+                &self.cypher_user_pubkey,
                 signer,
                 CancelOrderInstructionV2 {
                     order_id: order.order_id,
@@ -424,11 +433,6 @@ impl OrderManager {
         let inflight_orders = self.inflight_orders.read().await;
         let mut new_orders = inflight_orders.new_orders.write().await;
 
-        let cypher_user_pubkey =
-            derive_cypher_user_address(&cypher_group.self_address, &signer.pubkey()).0;
-        let open_orders_pubkey =
-            derive_open_orders_address(&cypher_market.dex_market, &cypher_user_pubkey).0;
-
         if quote_vols.ask_size > 0 {
             let max_native_pc_qty_ask = quote_vols.ask_size as u64 * best_ask;
             let client_order_id = *self.client_order_id.read().await;
@@ -442,8 +446,8 @@ impl OrderManager {
                 cypher_market,
                 cypher_token,
                 &self.market_state.unwrap(),
-                &open_orders_pubkey,
-                &cypher_user_pubkey,
+                &self.open_orders_pubkey,
+                &self.cypher_user_pubkey,
                 signer,
                 NewOrderInstructionV3 {
                     client_order_id,
@@ -475,8 +479,8 @@ impl OrderManager {
                 cypher_market,
                 cypher_token,
                 &self.market_state.unwrap(),
-                &open_orders_pubkey,
-                &cypher_user_pubkey,
+                &self.open_orders_pubkey,
+                &self.cypher_user_pubkey,
                 signer,
                 NewOrderInstructionV3 {
                     client_order_id,

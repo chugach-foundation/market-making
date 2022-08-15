@@ -75,9 +75,8 @@ impl InventoryManager {
         &self,
         user: &CypherUser,
         group: &CypherGroup,
-        cypher_token: &CypherToken,
     ) -> QuoteVolumes {
-        let current_delta = self.get_user_delta(user, group, cypher_token);
+        let current_delta = self.get_user_delta(user, group);
 
         let adjusted_vol = self.adj_quote_size(current_delta.abs().try_into().unwrap());
         let (bid_size, ask_size) = if current_delta < 0 {
@@ -96,9 +95,15 @@ impl InventoryManager {
         &self,
         cypher_user: &CypherUser,
         cypher_group: &CypherGroup,
-        cypher_token: &CypherToken,
     ) -> i64 {
-        let user_pos = cypher_user.get_position(self.market_idx).unwrap();
+        let maybe_pos = cypher_user.get_position(self.market_idx);
+
+        let user_pos = match maybe_pos {
+            Some(position) => position,
+            None => {
+                return 0;
+            }
+        };
 
         info!(
             "[INVMGR-{}] Base Borrows: {}. Base Deposits: {}",
@@ -109,8 +114,8 @@ impl InventoryManager {
         let div: Number = 10_u64.checked_pow(6).unwrap().into();
         let c_asset_divisor = 10_u64.checked_pow(self.decimals as u32).unwrap();
 
-        let long_pos = user_pos.total_deposits(cypher_token).as_u64(0) as i64 / c_asset_divisor as i64;
-        let short_pos = user_pos.total_borrows(cypher_token).as_u64(0) as i64/ c_asset_divisor as i64;
+        let long_pos = user_pos.base_deposits().as_u64(0) as i64 / c_asset_divisor as i64;
+        let short_pos = user_pos.base_borrows().as_u64(0) as i64/ c_asset_divisor as i64;
 
         let delta = long_pos as i64 - short_pos as i64;
 

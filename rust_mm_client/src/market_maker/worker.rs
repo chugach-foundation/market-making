@@ -42,7 +42,7 @@ pub struct Worker {
     cypher_market: RwLock<CypherMarket>,
     cypher_user_pubkey: Pubkey,
     open_orders_pubkey: Pubkey,
-    signer: Keypair,
+    signer: Arc<Keypair>,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -61,7 +61,7 @@ impl Worker {
             cypher_market: RwLock::new(CypherMarket::default()),
             cypher_user_pubkey: Pubkey::default(),
             open_orders_pubkey: Pubkey::default(),
-            signer: Keypair::new(),
+            signer: Arc::new(Keypair::new()),
         }
     }
 
@@ -72,6 +72,7 @@ impl Worker {
         cypher_account_receiver: Receiver<Box<CypherUser>>,
         cypher_group_receiver: Receiver<Box<CypherGroup>>,
         shutdown: Arc<Sender<bool>>,
+        signer: Arc<Keypair>,
         cypher_user_pubkey: Pubkey,
         open_orders_pubkey: Pubkey,
     ) -> Self {
@@ -82,14 +83,11 @@ impl Worker {
             cypher_account_receiver: Mutex::new(cypher_account_receiver),
             cypher_group_receiver: Mutex::new(cypher_group_receiver),
             shutdown,
+            signer,
             cypher_user_pubkey,
             open_orders_pubkey,
             ..Worker::default()
         }
-    }
-
-    pub fn set_keypair(&mut self, keypair: Keypair) {
-        self.signer = keypair;
     }
 
     pub async fn start(self) {
@@ -172,7 +170,7 @@ impl Worker {
 
             let quote_vols = self
                 .inventory_manager
-                .get_quote_volumes(&cypher_user, &cypher_group, cypher_token)
+                .get_quote_volumes(&cypher_user, &cypher_group)
                 .await;
 
             info!(
@@ -239,7 +237,7 @@ impl Worker {
 
         let quote_vols = self
             .inventory_manager
-            .get_quote_volumes(&cypher_user, &cypher_group, cypher_token)
+            .get_quote_volumes(&cypher_user, &cypher_group)
             .await;
 
         info!(

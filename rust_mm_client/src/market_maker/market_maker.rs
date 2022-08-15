@@ -52,7 +52,7 @@ pub struct MarketMaker {
     config: Arc<MarketMakerConfig>,
     cypher_config: Arc<CypherConfig>,
 
-    owner_keypair: Keypair,
+    owner_keypair: Arc<Keypair>,
     cypher_user_pubkey: Pubkey,
     cypher_user: Box<CypherUser>,
     cypher_group_pubkey: Pubkey,
@@ -82,7 +82,7 @@ impl MarketMaker {
             pubsub_client,
             config,
             cypher_config,
-            owner_keypair,
+            owner_keypair: Arc::new(owner_keypair),
             cypher_user,
             cypher_user_pubkey,
             cypher_group,
@@ -154,7 +154,6 @@ impl MarketMaker {
         self.tasks.push(om_t);
 
         let worker_t = tokio::spawn(async move {
-            self.worker.set_keypair(self.owner_keypair);
             self.worker.start().await;
         });
         self.tasks.push(worker_t);
@@ -318,6 +317,9 @@ impl MarketMaker {
             arc_ob_s.subscribe(),
             self.shutdown_sender.subscribe(),
             market_state,
+            Arc::clone(&self.owner_keypair),
+            self.cypher_user_pubkey,
+            open_orders_pubkey
         ));
 
         self.worker = Worker::new(
@@ -327,6 +329,7 @@ impl MarketMaker {
             arc_ca_s.subscribe(),
             arc_cg_s.subscribe(),
             Arc::clone(&self.shutdown_sender),
+            Arc::clone(&self.owner_keypair),
             self.cypher_user_pubkey,
             open_orders_pubkey,
         );
