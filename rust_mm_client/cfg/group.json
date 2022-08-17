@@ -42,6 +42,12 @@
                     "decimals": 4,
                     "tokenIndex": 5
                 },
+                {   
+                    "symbol": "SOLETH2",
+                    "mint": "DrM3iEWtAShUtAR56JpK9pfmKA3RTTEdAevEYMK5T4xg",
+                    "decimals": 0,
+                    "tokenIndex": 6
+                },
                 {
                     "symbol": "USDC",
                     "mint": "DPhNUKVhnrkdbq37GUgTUBRbZLsvziX1p5e5YUXyjBsb",
@@ -123,6 +129,21 @@
                     "bids": "HS5fYSYuQF2HccPYupocWY1CsZRjN7ojo1R5DfbHAouA",
                     "asks": "4NaDdz2pQk4s3dzjiESBvsjTCJPkPRQbPbkcyaKiYBuz",
                     "eventQueue": "3SNcDUer66oBTz3cvWsjaKTWmN9kgGDTczCqBco851oX"
+                },
+                {
+                    "name": "SOL/ETH2",
+                    "baseSymbol": "SOLETH2",
+                    "quoteSymbol": "USDC",
+                    "marketType": "Pair",
+                    "pairBaseSymbol": "SOL",
+                    "pairQuoteSymbol": "ETH",
+                    "address": "pr3nQoAicJfmXLStiKvBADVnT6diThfxKPGau1YcZTa",
+                    "baseDecimals": 0,
+                    "quoteDecimals": 6,
+                    "marketIndex": 6,
+                    "bids": "4BVbJ5sQDXfr6yoM4EdZbh698joXJNX3akbgsbeYdPkn",
+                    "asks": "AiXAb8f9QoNQdVR9dT7KzbwtqapvYYJhB45nPJvLA3FH",
+                    "eventQueue": "AJ88TrTCuuRTpzZGbYsnnsHFj6t3zdpbmFX7PFoyH9aa"
                 }
             ]
         },

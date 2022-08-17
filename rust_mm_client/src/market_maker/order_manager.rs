@@ -9,7 +9,6 @@ use {
         MarketMakerError,
     },
     cypher::{
-        utils::{derive_cypher_user_address, derive_open_orders_address},
         CypherGroup, CypherMarket, CypherToken,
     },
     log::{info, warn},
@@ -25,7 +24,6 @@ use {
         instruction::Instruction,
         pubkey::Pubkey,
         signature::{Keypair, Signature},
-        signer::Signer,
         transaction::Transaction,
     },
     std::{num::NonZeroU64, sync::Arc},
@@ -285,7 +283,6 @@ impl OrderManager {
         cypher_group: &CypherGroup,
         cypher_market: &CypherMarket,
         cypher_token: &CypherToken,
-        signer: &Keypair,
         quote_vols: &QuoteVolumes,
         best_bid: u64,
         best_ask: u64,
@@ -301,7 +298,7 @@ impl OrderManager {
                     cypher_group,
                     cypher_market,
                     cypher_token,
-                    signer,
+                    &self.signer,
                 )
                 .await;
             info!(
@@ -319,7 +316,7 @@ impl OrderManager {
                     cypher_market,
                     cypher_token,
                     quote_vols,
-                    signer,
+                    &self.signer,
                     best_bid,
                     best_ask,
                 )
@@ -333,7 +330,7 @@ impl OrderManager {
         }
 
         if !ixs.is_empty() {
-            match self.submit_orders(ixs, signer).await {
+            match self.submit_orders(ixs, &self.signer).await {
                 Ok(_) => (),
                 Err(e) => {
                     return Err(e);

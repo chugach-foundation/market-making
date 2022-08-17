@@ -1,6 +1,6 @@
 use {
     crate::config::MarketMakerConfig,
-    cypher::{CypherGroup, CypherToken, CypherUser},
+    cypher::{CypherGroup, CypherUser},
     jet_proto_math::Number,
     log::info,
     serde::{Deserialize, Serialize},
