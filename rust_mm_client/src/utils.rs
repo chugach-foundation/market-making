@@ -92,6 +92,7 @@ pub fn get_init_open_orders_ix(
         cypher_group_pubkey,
         cypher_user_pubkey,
         signer,
+        signer,
         cypher_market,
         open_orders,
         &market_authority,

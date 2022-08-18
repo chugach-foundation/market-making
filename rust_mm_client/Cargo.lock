@@ -304,23 +304,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "anchor-client"
-version = "0.25.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ee0e630f9310a0134c92df4458890a0f9c5b662d69c305690af1c17f5cd0b3ba"
-dependencies = [
- "anchor-lang 0.25.0",
- "anyhow",
- "regex",
- "serde",
- "solana-account-decoder",
- "solana-client",
- "solana-sdk",
- "thiserror",
- "url",
-]
-
-[[package]]
 name = "anchor-derive-accounts"
 version = "0.24.2"
 source = "git+https://github.com/chugach-foundation/anchor.git#9131d9f6db1f69ac829179e702fc1337f1993411"
@@ -348,7 +331,7 @@ dependencies = [
 [[package]]
 name = "anchor-discriminator"
 version = "0.1.0"
-source = "git+https://github.com/chugach-foundation/cypher-cpi.git?rev=29e7b2d#29e7b2d50c1de16db668fae945c4bb961c0d84b9"
+source = "git+https://github.com/chugach-foundation/cypher-cpi.git?rev=f35be9d#f35be9dce8062abaf28bc74f5492bdcb84222188"
 dependencies = [
  "sha2 0.9.9",
 ]
@@ -473,7 +456,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d65904c3106851f6d1bb87d504044764819d69c51d2b4346d59d399d8afa7d18"
 dependencies = [
  "anchor-lang 0.25.0",
- "serum_dex 0.4.0",
  "solana-program",
  "spl-associated-token-account",
  "spl-token",
@@ -1264,16 +1246,18 @@ dependencies = [
 [[package]]
 name = "cypher"
 version = "0.1.0"
-source = "git+https://github.com/chugach-foundation/cypher-cpi.git?rev=29e7b2d#29e7b2d50c1de16db668fae945c4bb961c0d84b9"
+source = "git+https://github.com/chugach-foundation/cypher-cpi.git?rev=f35be9d#f35be9dce8062abaf28bc74f5492bdcb84222188"
 dependencies = [
- "anchor-discriminator 0.1.0 (git+https://github.com/chugach-foundation/cypher-cpi.git?rev=29e7b2d)",
+ "anchor-discriminator 0.1.0 (git+https://github.com/chugach-foundation/cypher-cpi.git?rev=f35be9d)",
  "anchor-gen",
  "anchor-lang 0.24.2",
  "anchor-spl 0.24.2",
  "arrayref",
  "bytemuck",
  "jet-proto-math",
- "serum_dex 0.5.6 (git+https://github.com/chugach-foundation/serum-dex.git?rev=2fab8b9)",
+ "num_enum",
+ "serum_dex 0.5.6 (git+https://github.com/chugach-foundation/serum-dex.git?rev=0353fbb)",
+ "static_assertions",
 ]
 
 [[package]]
@@ -3233,9 +3217,8 @@ dependencies = [
 name = "rust_mm_client"
 version = "0.1.0"
 dependencies = [
- "anchor-client",
  "anchor-lang 0.24.2",
- "anchor-spl 0.25.0",
+ "anchor-spl 0.24.2",
  "arrayref",
  "base64 0.13.0",
  "bitflags",
@@ -3255,7 +3238,7 @@ dependencies = [
  "safe-transmute",
  "serde",
  "serde_json",
- "serum_dex 0.5.6 (git+https://github.com/chugach-foundation/serum-dex.git?rev=2fab8b9)",
+ "serum_dex 0.5.6 (git+https://github.com/chugach-foundation/serum-dex.git?rev=0353fbb)",
  "solana-account-decoder",
  "solana-client",
  "solana-sdk",
@@ -3557,32 +3540,8 @@ dependencies = [
 
 [[package]]
 name = "serum_dex"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "02705854bae4622e552346c8edd43ab90c7425da35d63d2c689f39238f8d8b25"
-dependencies = [
- "arrayref",
- "bincode",
- "bytemuck",
- "byteorder",
- "enumflags2",
- "field-offset",
- "itertools 0.9.0",
- "num-traits",
- "num_enum",
- "safe-transmute",
- "serde",
- "solana-program",
- "spl-token",
- "static_assertions",
- "thiserror",
- "without-alloc",
-]
-
-[[package]]
-name = "serum_dex"
 version = "0.5.6"
-source = "git+https://github.com/chugach-foundation/serum-dex.git?rev=2fab8b9#2fab8b91cb0963e81ede434599bf13c9a0517dd1"
+source = "git+https://github.com/chugach-foundation/serum-dex.git?rev=0353fbb#0353fbb1376a4bbf3f273880990b9c087fa77659"
 dependencies = [
  "arbitrary",
  "arrayref",
