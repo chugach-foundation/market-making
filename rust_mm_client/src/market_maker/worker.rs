@@ -199,7 +199,6 @@ impl Worker {
                     &cypher_group,
                     &cypher_market,
                     cypher_token,
-                    &self.signer,
                     &quote_vols,
                     best_bid,
                     best_ask,
