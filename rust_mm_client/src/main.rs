@@ -33,7 +33,7 @@ use {
     serum_dex::state::OpenOrders,
     solana_client::nonblocking::rpc_client::RpcClient,
     solana_sdk::{
-        commitment_config::CommitmentConfig, pubkey::Pubkey, signature::Keypair, signer::Signer,
+        commitment_config::CommitmentConfig, pubkey::Pubkey, signature::Keypair, signer::Signer, signature::read_keypair_file
     },
     spl_associated_token_account::instruction::create_associated_token_account,
     std::{fs::File, io::Read, str::FromStr, sync::Arc},
@@ -77,47 +77,6 @@ pub enum MarketMakerError {
     ShutdownError,
 }
 
-fn load_keypair(path: &str) -> Result<Keypair, MarketMakerError> {
-    let fd = File::open(path);
-
-    let mut file = match fd {
-        Ok(f) => f,
-        Err(e) => {
-            warn!("Failed to load keypair file: {}", e.to_string());
-            return Err(MarketMakerError::KeypairFileOpenError);
-        }
-    };
-
-    let file_string = &mut String::new();
-    let file_read_res = file.read_to_string(file_string);
-
-    let _ = if let Err(e) = file_read_res {
-        warn!(
-            "Failed to read keypair bytes from keypair file: {}",
-            e.to_string()
-        );
-        return Err(MarketMakerError::KeypairFileReadError);
-    };
-
-    let keypair_bytes: Vec<u8> = file_string
-        .replace('[', "")
-        .replace(']', "")
-        .replace(',', " ")
-        .split(' ')
-        .map(|x| u8::from_str(x).unwrap())
-        .collect();
-
-    let keypair = Keypair::from_bytes(keypair_bytes.as_ref());
-
-    match keypair {
-        Ok(kp) => Ok(kp),
-        Err(e) => {
-            warn!("Failed to load keypair from bytes: {}", e.to_string());
-            Err(MarketMakerError::KeypairLoadError)
-        }
-    }
-}
-
 #[tokio::main]
 async fn main() -> Result<(), MarketMakerError> {
     let args = Cli::parse();
@@ -134,7 +93,7 @@ async fn main() -> Result<(), MarketMakerError> {
 
     let cluster_config = cypher_config.get_config_for_cluster(mm_config.group.as_str());
 
-    let keypair = load_keypair(mm_config.wallet.as_str()).unwrap();
+    let keypair = read_keypair_file(mm_config.wallet.as_str()).unwrap();
     let pubkey = keypair.pubkey();
     info!("Loaded keypair with pubkey: {}", pubkey.to_string());
 
