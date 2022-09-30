@@ -216,6 +216,36 @@
                     "tokenIndex": 9
                 },
                 {
+                    "symbol": "SOL-1031",
+                    "mint": "8EFYFWE1GYnSKLHFZhZ9Ea3SsKRVvRGAAvKcFzaonide",
+                    "decimals": 3,
+                    "tokenIndex": 10
+                },
+                {
+                    "symbol": "ETH-1031",
+                    "mint": "DziLd3g373AxJzh4hMJBo4wdiqriarp3Jay1J2wwpgnV",
+                    "decimals": 3,
+                    "tokenIndex": 11
+                },
+                {
+                    "symbol": "BTC-1031",
+                    "mint": "8xN2jxHqDc1ZzvS5icb7Uq88tYpe84yrMVZNqzpUQAaZ",
+                    "decimals": 5,
+                    "tokenIndex": 12
+                },
+                {
+                    "symbol": "SOLETH-1031",
+                    "mint": "AmRKtewftiVR8BT8XqsTpmKTj2HuyJA5X82T8fk1QctJ",
+                    "decimals": 0,
+                    "tokenIndex": 13
+                },
+                {
+                    "symbol": "BTCETH-1031",
+                    "mint": "C6tpDTEQcD3Sj4rVUWMg7aYJ2pbeDmFECPdnbA8HBYXz",
+                    "decimals": 3,
+                    "tokenIndex": 14
+                },
+                {
                     "symbol": "USDC",
                     "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
                     "decimals": 6,
@@ -390,6 +420,81 @@
                     "bids": "Bicrw5PmxyhnhJ82vxEp9Rmg7za1FNqyzJxgBkFPuREz",
                     "asks": "FsRDwGZaVZNsifGWdbaKSepbHJgLiP6S1Fukp5NGPQJK",
                     "eventQueue": "FFTnPtwR991GdTXWK3VMhTrT3BsS6y6wf6n8jnRMVb3p"
+                },
+                {
+                    "name": "SOL-1031",
+                    "baseSymbol": "SOL-1031",
+                    "quoteSymbol": "USDC",
+                    "marketType": "Pair",
+                    "pairBaseSymbol": "SOL-1031",
+                    "pairQuoteSymbol": "USDC",
+                    "address": "AixKMQJmhByRWgVj42EEA1cyEenJmDTCxkhRE34KWPGu",
+                    "baseDecimals": 3,
+                    "quoteDecimals": 6,
+                    "marketIndex": 10,
+                    "bids": "3PzwTna9nQ7WjpLNrZvMdRNR6ksbEy7SqbRCJBR3Vh78",
+                    "asks": "u7mTBBa1zyv5ZGeJpN3ogrR1SHyGGAbVc2EKzfJZYrA",
+                    "eventQueue": "4w6eouMr1WqqYagw8GHkLkSCNgaLqBGy94rSpXb7Rx2T"
+                },
+                {
+                    "name": "ETH-1031",
+                    "baseSymbol": "ETH-1031",
+                    "quoteSymbol": "USDC",
+                    "marketType": "Pair",
+                    "pairBaseSymbol": "ETH-1031",
+                    "pairQuoteSymbol": "USDC",
+                    "address": "HMqFW36HYjEsa7LgM4KvwvaWAqACgmDX9t2yCdSqnGBL",
+                    "baseDecimals": 3,
+                    "quoteDecimals": 6,
+                    "marketIndex": 11,
+                    "bids": "394AQ3onkm3XBMEq1ccn4PowqyVn79tw9pKXiJYjwEgy",
+                    "asks": "4cc1V1XfP6iAUVrDGx83z48GjDFbtE4rqY6a8AKnKEZ5",
+                    "eventQueue": "Dc39h4ykD7TKDuzHBSXwfnP6D9TfsQWAGwG7mkr9KuQQ"
+                },
+                {
+                    "name": "BTC-1031",
+                    "baseSymbol": "BTC-1031",
+                    "quoteSymbol": "USDC",
+                    "marketType": "Pair",
+                    "pairBaseSymbol": "BTC-1031",
+                    "pairQuoteSymbol": "USDC",
+                    "address": "8zuCHnTzhdFG3tBGCnV4XDViwTzuKRivfF7SPrgDEezi",
+                    "baseDecimals": 5,
+                    "quoteDecimals": 6,
+                    "marketIndex": 12,
+                    "bids": "83jok6UtUtBs2HErjF7TbRwRegzipfmDkYLstPZoqVM1",
+                    "asks": "EfgEPP8H65d3ofvkMyUUYGHBunyVRvpJ7HAHZ2AsX6WU",
+                    "eventQueue": "HK2cxYYKV11HpndrptFm3hUuowFTZvGnAEy8VobMvZj8"
+                },
+                {
+                    "name": "SOL/ETH-1031",
+                    "baseSymbol": "SOLETH-1031",
+                    "quoteSymbol": "USDC",
+                    "marketType": "Pair",
+                    "pairBaseSymbol": "SOLETH-1031",
+                    "pairQuoteSymbol": "USDC",
+                    "address": "7UZQZi7VUyr3PWAqDoytESKkEmeacJsa8vCQsrSw6rNK",
+                    "baseDecimals": 0,
+                    "quoteDecimals": 6,
+                    "marketIndex": 13,
+                    "bids": "AUdQvFPEajHjxWYnpSESaRAckyUQRbKvtNbg7aUJq8NV",
+                    "asks": "pgr7R9c3Q8ZyC5fxysBZAkUEEUFeQxsLmJoSkrPRV16",
+                    "eventQueue": "9PBA5rys1BQLGfmXhJdWoDVAq42dfUeji4Wbr1c9PxYQ"
+                },
+                {
+                    "name": "BTC/ETH-1031",
+                    "baseSymbol": "BTCETH-1031",
+                    "quoteSymbol": "USDC",
+                    "marketType": "Pair",
+                    "pairBaseSymbol": "BTCETH-1031",
+                    "pairQuoteSymbol": "USDC",
+                    "address": "B6eHH4WTZiNq55VHUtmvtcCHshcmYnjNXJ5RKzR7hdAv",
+                    "baseDecimals": 3,
+                    "quoteDecimals": 6,
+                    "marketIndex": 14,
+                    "bids": "42qQssyubsY6M8hnQ5zv5Gv1YWmbwGK5ZMzH3XTkNX3y",
+                    "asks": "7Eghh1SuSbAKcxX1cWpcJucehp4KHiv9hKzrYY82gqZx",
+                    "eventQueue": "HENuB4E2fSiuhhLsjh9igVRtyRar6LkwAankeoMGnXbb"
                 }
             ]
         }
